@@ -131,13 +131,21 @@ The _config.json_ in [test_computed_parameterization](https://github.com/Pranav-
 ```
 
 ## Checking Convergence
-The script [check_convergence.py](https://github.com/Pranav-Jain/NN_convergence/blob/main/check_convergence.py) runs the inference for trained models for all examples and uses certain heuristics to check for convergence. The current heuristics used are that if for an example, the slope < -0.3 and correlatio_coefficient < -0.5, then we claim convergence.
+The script [check_convergence.py](https://github.com/Pranav-Jain/NN_convergence/blob/main/check_convergence.py) runs the inference for trained models for all examples and uses certain heuristics to check for convergence. The current heuristics used are that if for an example, the slope < -0.3 and correlation_coefficient < -0.5, then we claim convergence.
 
 Use the following command to run the script
 ```sh
 python3 check_convergence.py [test_exact|test_exact_parameterization|test_computed_parameterization]
 ```
-__Note__: Make sure that the operation in the config file for the directory you are running for is set to _"plot"_.
+__Note__: Make sure that the operation in the config file for the directory you are running for is set to _"plot"_ before running the above command.
+
+## Training MLP to learn the normals
+The scripts [train_hf_normal.py](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/train_hf_normal.py) and [train_ellipsoid_normal.py](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/train_ellipsoid_normal.py) can be used to train an MLP that given a point on the domain returns the unit normal at that point.
+Use the following command to run the script
+```sh
+python3 [train_hf_normal.py|train_ellipsoid_normal.py] [exact|mesh]
+```
+The argument is to know whether to learn the exact normals (experiment 3) or the mesh normals (experiment 4).
 
 ## Pretrained models
 We test using multiple analytical functions for all experiments. The pretrained models are stored in __poisson_results__ for each experiment. The models are trained using the `operation="train"` in the config file.
