@@ -4,7 +4,7 @@
     "NN": "noNN",
     "operation": "train",
     "form": "strong",
-    "num_basis": 2000,
+    "num_basis": 10,
     "basis_type": "fourier",
     "threshold": 0.0,
     "domain": {
@@ -17,7 +17,7 @@
         "grad_clip": 10.0,
         "scheduler_patience": 1000,
         "num_samples": 10000,
-        "max_iter": 150000
+        "max_iter": 100000
     },
     "debug": false
 }
