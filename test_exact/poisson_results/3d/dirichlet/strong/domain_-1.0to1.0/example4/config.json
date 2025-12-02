@@ -1,0 +1,23 @@
+{
+    "dimension": 3,
+    "bc": "dirichlet",
+    "operation": "train",
+    "form": "strong",
+    "num_basis": 100,
+    "basis_type": "fourier",
+    "threshold": 0.0,
+    "domain": {
+        "min": -1.0,
+        "max": 1.0
+    },
+    "architecture": {
+        "lr": 0.001,
+        "num_layers": 3,
+        "grad_clip": 10.0,
+        "scheduler_patience": 1000,
+        "num_samples": 10000,
+        "max_iter": 100000
+    },
+    "debug": false,
+    "memorycompare": false
+}
