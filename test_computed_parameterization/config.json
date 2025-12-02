@@ -1,9 +1,7 @@
 {
     "surface": "handclosed",
     "bc": "dirichlet",
-    "operation": "train",
-    "num_basis": 2000,
-    "basis_type": "fourier",
+    "operation": "plot",
     "threshold": 0.0,
 
     "domain" : {
@@ -17,6 +15,6 @@
         "grad_clip" : 10.0,
         "scheduler_patience" : 1000,
         "num_samples" : 10000,
-        "max_iter" : 60000
+        "max_iter" : 150000
     }
 }
