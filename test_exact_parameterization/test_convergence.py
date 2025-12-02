@@ -634,7 +634,8 @@ def plot():
             pred = pred + const
 
         l2_loss = np.linalg.norm(pred - true, 2) / np.linalg.norm(true, 2)
-        print(l2_loss, n_layers, size_layer)
+        print("Depth and Width:", n_layers, size_layer)
+        print("PINN Loss:", l2_loss)
         losses.append(l2_loss)
 
         total_trainable_params = int(sum(p.numel() for p in model.parameters() if p.requires_grad))
@@ -687,6 +688,7 @@ def plot():
             u = u + const
         
         l2_loss = np.linalg.norm(f(v_mesh) - u, 2) / np.linalg.norm(f(v_mesh), 2)
+        print("FEM Loss:", l2_loss)
         fem_loss.append(l2_loss)
         fem_dof.append(v_mesh.shape[0])
 

@@ -250,7 +250,7 @@ def test_FEM(nx, ny, return_memory=False):
         u = sp.sparse.linalg.spsolve(L, lap_f)
         l2_loss = relative_l2_loss(u, f_2d_numpy(V))
 
-    print(f"FEM L2 loss: {l2_loss}")
+    print(f"FEM Loss: {l2_loss}")
 
     return l2_loss
 
@@ -598,8 +598,8 @@ def plot():
 
         losses.append(loss_l2)
 
-        print(n_layers, size_layer)
-        print(loss_l2)
+        print("Depth and Width:", n_layers, size_layer)
+        print("PINN Loss:", loss_l2)
 
         # Plot the error plots using polyscope
         ps.init()
