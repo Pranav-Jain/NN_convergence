@@ -1,9 +1,7 @@
 {
     "dimension": 3,
     "bc": "dirichlet",
-    "operation": "train",
-    "num_basis": 100,
-    "basis_type": "fourier",
+    "operation": "plot",
     "threshold": 0.0,
     
     "domain" : {

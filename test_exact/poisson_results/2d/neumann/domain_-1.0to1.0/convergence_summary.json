@@ -2,92 +2,92 @@
     "individual_results": [
         {
             "example": "example1",
-            "slope": -0.9046037193932568,
-            "correlation": -0.8009623581272066,
+            "slope": -0.9027727837779822,
+            "correlation": -0.8012564617089759,
             "converged": 1
         },
         {
             "example": "example2",
-            "slope": 0.02573974937846344,
-            "correlation": 0.02431542179337777,
+            "slope": 0.026627862735540866,
+            "correlation": 0.025155318145495997,
             "converged": 0
         },
         {
             "example": "example3",
-            "slope": -0.8849235031661765,
-            "correlation": -0.8099101655269028,
+            "slope": -0.8861525758423952,
+            "correlation": -0.8099380585087225,
             "converged": 1
         },
         {
             "example": "example4",
-            "slope": -0.8824113429479673,
-            "correlation": -0.8446634417781194,
+            "slope": -0.8830303375938848,
+            "correlation": -0.8452716644931364,
             "converged": 1
         },
         {
             "example": "example5",
-            "slope": -1.4530065144591968,
-            "correlation": -0.9136191614588207,
+            "slope": -2.369127510637158,
+            "correlation": -0.9194911732602893,
             "converged": 1
         },
         {
             "example": "example6",
-            "slope": -1.1457412643787646,
-            "correlation": -0.7725702389514392,
+            "slope": -1.146891673253852,
+            "correlation": -0.7726637181319944,
             "converged": 1
         },
         {
             "example": "example7",
-            "slope": -0.5471732804308841,
-            "correlation": -0.274383017133574,
+            "slope": -0.5231551258075766,
+            "correlation": -0.2708519716827512,
             "converged": 0
         },
         {
             "example": "example8",
-            "slope": -0.38648014810247056,
-            "correlation": -0.16236472341319455,
+            "slope": -0.3654620869922952,
+            "correlation": -0.15697001847181,
             "converged": 0
         },
         {
             "example": "example9",
-            "slope": -0.7043925769333156,
-            "correlation": -0.39369360436769496,
+            "slope": -0.6813633250909973,
+            "correlation": -0.3945196758507236,
             "converged": 0
         },
         {
             "example": "example10",
-            "slope": 0.024919118470698505,
-            "correlation": 0.6429721037053725,
+            "slope": -0.4761937151671763,
+            "correlation": -0.2281876557899214,
             "converged": 0
         },
         {
             "example": "example11",
-            "slope": -1.831915609413132,
-            "correlation": -0.9135382824376355,
+            "slope": -1.8314453779289057,
+            "correlation": -0.9134107780310367,
             "converged": 1
         },
         {
             "example": "example12",
-            "slope": -0.3619098569990061,
-            "correlation": -0.8553963050952273,
+            "slope": -0.3627596125237183,
+            "correlation": -0.855776809634696,
             "converged": 1
         },
         {
             "example": "example13",
-            "slope": -0.6068608847355936,
-            "correlation": -0.625911713711354,
+            "slope": -0.6065074527430968,
+            "correlation": -0.6253696780490363,
             "converged": 1
         },
         {
             "example": "example14",
-            "slope": -1.596477516793265,
-            "correlation": -0.9780042887154643,
+            "slope": -1.5950262715331056,
+            "correlation": -0.9780922260822911,
             "converged": 1
         },
         {
             "example": "example15",
-            "slope": -1.7480656658233993,
-            "correlation": -0.9727538048196317,
+            "slope": -1.8798405791098998,
+            "correlation": -0.9660196092039988,
             "converged": 1
         }
     ],

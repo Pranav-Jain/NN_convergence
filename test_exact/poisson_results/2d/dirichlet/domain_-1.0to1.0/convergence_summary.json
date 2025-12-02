@@ -2,92 +2,92 @@
     "individual_results": [
         {
             "example": "example1",
-            "slope": -0.7608243290493707,
-            "correlation": -0.7834926585637869,
+            "slope": -0.765772225087828,
+            "correlation": -0.7854523461373673,
             "converged": 1
         },
         {
             "example": "example2",
-            "slope": -0.40775987467825253,
-            "correlation": -0.7112677552905128,
+            "slope": -0.40846246279307025,
+            "correlation": -0.7115072638255284,
             "converged": 1
         },
         {
             "example": "example3",
-            "slope": -0.714784697775684,
-            "correlation": -0.9545197609349496,
+            "slope": -0.7162547865455091,
+            "correlation": -0.953532448517343,
             "converged": 1
         },
         {
             "example": "example4",
-            "slope": -0.7350612258112059,
-            "correlation": -0.9414982747872908,
+            "slope": -0.7380888416359946,
+            "correlation": -0.9401955275414772,
             "converged": 1
         },
         {
             "example": "example5",
-            "slope": -0.5691957558142274,
-            "correlation": -0.9261077145162505,
+            "slope": -1.3932455923581348,
+            "correlation": -0.9706082141762024,
             "converged": 1
         },
         {
             "example": "example6",
-            "slope": -0.7697520063277894,
-            "correlation": -0.8914074812602869,
+            "slope": -0.7637661285288018,
+            "correlation": -0.8932505956674152,
             "converged": 1
         },
         {
             "example": "example7",
-            "slope": -0.8879064073913202,
-            "correlation": -0.5748131852530713,
+            "slope": -0.8904815756858547,
+            "correlation": -0.6062254861042055,
             "converged": 1
         },
         {
             "example": "example8",
-            "slope": -1.5894643231640924,
-            "correlation": -0.8183467801222268,
+            "slope": -1.578618072801707,
+            "correlation": -0.818400857766218,
             "converged": 1
         },
         {
             "example": "example9",
-            "slope": -0.5774203724448581,
-            "correlation": -0.5089221232239673,
+            "slope": -0.5506678638297998,
+            "correlation": -0.5155137186134611,
             "converged": 1
         },
         {
             "example": "example10",
-            "slope": -0.013458359131943078,
-            "correlation": -0.7704389795563351,
+            "slope": 0.08766417717800198,
+            "correlation": 0.07054081748578012,
             "converged": 0
         },
         {
             "example": "example11",
-            "slope": -0.37317749741947626,
-            "correlation": -0.6766381641411277,
+            "slope": -0.37299515745747397,
+            "correlation": -0.674645296819031,
             "converged": 1
         },
         {
             "example": "example12",
-            "slope": -0.6666847680553403,
-            "correlation": -0.7658324122375395,
+            "slope": -0.6666033056638893,
+            "correlation": -0.7648347018699857,
             "converged": 1
         },
         {
             "example": "example13",
-            "slope": -0.19310834892282533,
-            "correlation": -0.17036567028226296,
+            "slope": -0.19459030430606342,
+            "correlation": -0.17117047554839576,
             "converged": 0
         },
         {
             "example": "example14",
-            "slope": -0.4324117518231542,
-            "correlation": -0.7337119211505739,
+            "slope": -0.4298600013384695,
+            "correlation": -0.733227368278787,
             "converged": 1
         },
         {
             "example": "example15",
-            "slope": -0.7311784070414914,
-            "correlation": -0.9530106990236445,
+            "slope": -0.834057477639403,
+            "correlation": -0.9444207626195866,
             "converged": 1
         }
     ],
