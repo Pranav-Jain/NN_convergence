@@ -20,6 +20,13 @@ Our experiments can be summarised in the following table:
 4. Same as the third experiment, but instead, an MLP is used to learn the mesh normals
 5. Same as the fourth experiment, but instead, an MLP is used to learn the mesh normals of an arbitrary mesh
 
+## Installation
+Use the following to set up the environment
+```sh
+conda env create -f env.yaml
+conda activate test_convergence
+```
+
 ## Setup
 This code is tested on _x64 linux_ platform using _Python 3.12.4_.
 The code should run out of the box if all the required packages are installed.
