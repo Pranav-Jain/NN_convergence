@@ -1,5 +1,5 @@
 {
-    "surface": "heightfield",
+    "surface": "ellipsoid",
     "bc": "dirichlet",
     "NN": "noNN",
     "operation": "plot",

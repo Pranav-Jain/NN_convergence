@@ -603,7 +603,7 @@ def train():
             print(l2_loss)
 
             # Save the model
-            torch.save(lap_model.state_dict(), f"{save_dir}/example{sys.argv[1]}/model_{j}_{i}.pth")
+            torch.save(lap_model.state_dict(), f"{save_dir}/example{sys.argv[1]}/model_{j}_{i}_0.pth")
 
 def plot():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -639,6 +639,19 @@ def plot():
 
         total_trainable_params = int(sum(p.numel() for p in model.parameters() if p.requires_grad))
         dof.append(total_trainable_params)
+
+        # Plot the error plots using polyscope
+        ps.init()
+        ps.set_screenshot_extension(".png")
+        ps.register_point_cloud("Surface Points", V)
+        ps.get_point_cloud("Surface Points").add_scalar_quantity("True Solution", true, enabled=True)
+        ps.screenshot(f"{save_dir}/example{sys.argv[1]}/true_{size_layer}_{n_layers}.png")
+
+        ps.get_point_cloud("Surface Points").add_scalar_quantity("Predicted Solution", pred, enabled=True)
+        ps.screenshot(f"{save_dir}/example{sys.argv[1]}/pred_{size_layer}_{n_layers}.png")
+
+        ps.get_point_cloud("Surface Points").add_scalar_quantity("Error", np.abs(true - pred), enabled=True)
+        ps.screenshot(f"{save_dir}/example{sys.argv[1]}/error_{size_layer}_{n_layers}.png")
 
     fem_loss = []
     fem_dof = []
