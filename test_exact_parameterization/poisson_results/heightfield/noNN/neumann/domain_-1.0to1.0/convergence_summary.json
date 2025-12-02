@@ -1,0 +1,80 @@
+{
+    "individual_results": [
+        {
+            "example": "example1",
+            "slope": -0.9397373004295909,
+            "correlation": -0.9033994611939075,
+            "converged": 1
+        },
+        {
+            "example": "example2",
+            "slope": -1.0324480207039997,
+            "correlation": -0.9778448495825631,
+            "converged": 1
+        },
+        {
+            "example": "example3",
+            "slope": -1.3079116979852885,
+            "correlation": -0.9659202232493047,
+            "converged": 1
+        },
+        {
+            "example": "example4",
+            "slope": -2.0005612844441103,
+            "correlation": -0.9522091788115449,
+            "converged": 1
+        },
+        {
+            "example": "example5",
+            "slope": -0.0032367178888237035,
+            "correlation": -0.6244602682862199,
+            "converged": 0
+        },
+        {
+            "example": "example6",
+            "slope": -0.6672258522899852,
+            "correlation": -0.9514035067464128,
+            "converged": 1
+        },
+        {
+            "example": "example7",
+            "slope": -1.0120365035188386,
+            "correlation": -0.9852725272387393,
+            "converged": 1
+        },
+        {
+            "example": "example8",
+            "slope": -0.947535643245312,
+            "correlation": -0.9686711894315844,
+            "converged": 1
+        },
+        {
+            "example": "example9",
+            "slope": -1.2136372632800854,
+            "correlation": -0.9466175528834648,
+            "converged": 1
+        },
+        {
+            "example": "example10",
+            "slope": -3.7248963452690402,
+            "correlation": -0.8940086923835777,
+            "converged": 1
+        },
+        {
+            "example": "example11",
+            "slope": -1.053385652378816,
+            "correlation": -0.8306005759726623,
+            "converged": 1
+        },
+        {
+            "example": "example12",
+            "slope": -1.227649178433604,
+            "correlation": -0.9578478533099619,
+            "converged": 1
+        }
+    ],
+    "num_converged": 11,
+    "total_examples": 12,
+    "fraction_converged": 0.9166666666666666,
+    "overall_converged": 1
+}
