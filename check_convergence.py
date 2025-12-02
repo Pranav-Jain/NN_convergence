@@ -5,13 +5,15 @@ import subprocess
 import json
 from scipy.stats import linregress
 import pandas as pd
+import glob
 
 def run_plot(example_idx):
     """Run the plotting routine for a given example."""
     print(f"Running plot for example {example_idx}...")
     cwd = os.getcwd()
-    file_path = os.path.join(cwd, "test_parameterization.py") 
-    result = subprocess.run(["python3", file_path, str(example_idx)])
+    dir_path = os.path.join(cwd, sys.argv[1])
+    file_path = os.path.join(dir_path, "test_convergence.py")
+    result = subprocess.run(["python3", file_path, str(example_idx)], cwd=dir_path)
     if result.returncode != 0:
         print(f"Error running example {example_idx}:\n{result.stderr}")
         raise RuntimeError(f"Plotting failed for example {example_idx}")
@@ -24,16 +26,19 @@ def analyze_convergence(dof, loss):
     return slope, r_value, converged
 
 def main():
-    examples = range(1, 16)  # change range as needed
+    if sys.argv[1] == "test_exact" or sys.argv[1] == "test_exact/":
+        save_dir = f"test_exact/poisson_results/{config['dimension']}d/{config['bc']}/domain_{config['domain']['min']}to{config['domain']['max']}"
+    elif sys.argv[1] == "test_exact_parameterization" or sys.argv[1] == "test_exact_parameterization/":
+        save_dir = f"test_exact_parameterization/poisson_results/{config['surface']}/{config['NN']}/{config['bc']}/domain_{config['domain']['min']}to{config['domain']['max']}"
+    elif sys.argv[1] == "test_computed_parameterization" or sys.argv[1] == "test_computed_parameterization/":
+        save_dir = f"test_exact_parameterization/poisson_results/{config['surface']}/withNN_mesh/{config['bc']}/domain_{config['domain']['min']}to{config['domain']['max']}"
+
+    examples = glob.glob(os.path.join(save_dir, "example*"))
+    print(f"Found {len(examples)} examples in {save_dir}")
     results = []
 
-    for i in examples:
+    for i in range(1, len(examples) + 1):
         run_plot(i)
-
-    if config["form"] == "weak":
-        save_dir = f"poisson_results/{config['surface']}/{config['NN']}/{config['bc']}/{config['form']}/{config['basis_type']}/domain_{config['domain']['min']}to{config['domain']['max']}"
-    else:
-        save_dir = f"poisson_results/{config['surface']}/{config['NN']}/{config['bc']}/{config['form']}/domain_{config['domain']['min']}to{config['domain']['max']}"
     
     # --- Now read combined CSV once ---
     output_csv = os.path.join(save_dir, "output.csv")
@@ -80,7 +85,11 @@ def main():
     print("Saved summary to convergence_summary.json")
 
 if __name__ == "__main__":
-    with open("config.json", "r") as f:
+    if len(sys.argv) < 2:
+        print("Usage: python check_convergence.py <directory>")
+        sys.exit(1)
+
+    with open(os.path.join(sys.argv[1], "config.json"), "r") as f:
         config = json.load(f)
         if config["operation"] != "plot":
             raise ValueError("Config operation must be 'plot' to run this script.")
