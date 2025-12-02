@@ -1,0 +1,22 @@
+{
+    "surface": "handclosed",
+    "bc": "dirichlet",
+    "operation": "train",
+    "num_basis": 2000,
+    "basis_type": "fourier",
+    "threshold": 0.0,
+
+    "domain" : {
+        "min": -1.0,
+        "max": 1.0
+    },
+
+    "architecture" : {
+        "lr" : 1e-4,
+        "num_layers" : 3,
+        "grad_clip" : 10.0,
+        "scheduler_patience" : 1000,
+        "num_samples" : 10000,
+        "max_iter" : 60000
+    }
+}
