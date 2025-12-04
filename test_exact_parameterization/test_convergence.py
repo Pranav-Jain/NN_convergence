@@ -13,6 +13,9 @@ import json
 import sys
 import pandas as pd
 
+sys.path.append('../src')
+from siren import MLP, MLP_normals
+
 with open("config.json", "r") as f:
     config = json.load(f)
 
@@ -252,53 +255,6 @@ def laplacian_f(v):
 
     return lap_f.squeeze()
 
-# Define the MLP model with SIREN layers    
-class SIRENLayer(nn.Module):
-    def __init__(self, in_dim, out_dim, is_first=False, w0=30.0):
-        super().__init__()
-        self.is_first = is_first
-        self.in_dim = in_dim
-        self.w0 = w0
-        self.linear = nn.Linear(in_dim, out_dim)
-        self.init_weights()
-
-    def init_weights(self):
-        with torch.no_grad():
-            if self.is_first:
-                # first layer: U(-1/in_dim, 1/in_dim)
-                self.linear.weight.uniform_(-1 / self.in_dim, 1 / self.in_dim)
-            else:
-                # deeper layers: U(-sqrt(6/in_dim)/w0, sqrt(6/in_dim)/w0)
-                bound = np.sqrt(6 / self.in_dim) / self.w0
-                self.linear.weight.uniform_(-bound, bound)
-            self.linear.bias.fill_(0.0)
-
-    def forward(self, x):
-        return torch.sin(self.w0 * self.linear(x))
-    
-class MLP(nn.Module):
-    def __init__(self, n=512, n_layers=3, in_dim=3, out_dim=1, w0=30.0):
-        super().__init__()
-        layers = []
-
-        # First SIREN layer (high-frequency)
-        layers.append(SIRENLayer(in_dim, n, is_first=True, w0=w0))
-
-        # Hidden layers
-        for _ in range(n_layers):
-            layers.append(SIRENLayer(n, n, is_first=False, w0=1.0))
-
-        self.trunk = nn.Sequential(*layers)
-
-        self.final_layer = nn.Linear(n, out_dim, bias=True)
-        nn.init.xavier_uniform_(self.final_layer.weight)
-        nn.init.zeros_(self.final_layer.bias)
-
-    def forward(self, x):
-        features = self.trunk(x)
-        output = self.final_layer(features)
-        return output.squeeze()
-
 # Sample n points uniformly on the surface
 def sample_in_domain(n):
     if config["surface"] == "heightfield":
@@ -347,23 +303,6 @@ def sample_in_domain(n):
         print(usage_msg)
         exit()
 
-def get_embedding_torch(v_cart):
-    if config["surface"] == "heightfield":
-        v_emb = v_cart.clone()
-        v_emb[:, 2] = 0.0
-
-    elif config["surface"] == "ellipsoid":
-        v_emb = v_cart.clone()
-        v_emb[:, 0] = v_cart[:, 0] / 3.0
-        v_emb[:, 1] = v_cart[:, 1] / 2.0
-        v_emb[:, 2] = v_cart[:, 2] / 1.0
-
-    else:
-        print(usage_msg)
-        exit()
-
-    return v_emb
-
 def get_normals(v, S_theta=None):
     if config["NN"] == "withNN" or config["NN"] == "withNN_mesh":
         n = S_theta(v)
@@ -390,27 +329,17 @@ def get_normals(v, S_theta=None):
 
     return n
 
-def get_surface_laplacian(model, v_cart, v_emb, S_theta=None):
+def get_surface_laplacian(model, v_cart, S_theta=None):
 
     def model_scalar(v_):
         return model(v_).view(-1).requires_grad_(True)  # Ensure scalar output
         
-    if config["surface"] == "heightfield":
-        f_ = model_scalar(v_cart)
-
-        true_n = torch.zeros_like(v_cart)
-        true_n[:, 0] = -v_cart[:, 0]
-        true_n[:, 1] = -v_cart[:, 1]
-        true_n[:, 2] = 1.0
-        true_n = true_n / torch.linalg.norm(true_n, dim=1, keepdim=True)
-
-    elif config["surface"] == "ellipsoid":
-        f_ = model_scalar(v_cart)
+    u_pred = model_scalar(v_cart)
 
     n = get_normals(v_cart, S_theta)
 
-    grad_f = torch.autograd.grad(f_, v_cart, torch.ones_like(f_), create_graph=True, retain_graph=True)[0]
-
+    grad_f = torch.autograd.grad(u_pred, v_cart, torch.ones_like(u_pred), create_graph=True, retain_graph=True)[0]
+    
     # Surface gradient (tangential component)
     grad_f_surf = grad_f - torch.sum(grad_f * n, dim=1, keepdim=True) * n
 
@@ -469,7 +398,7 @@ def train_strong_form(l_model, device, n, size_layer, n_layers):
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.5, patience=config["architecture"]["scheduler_patience"])
 
     if config["NN"] == "withNN":
-        S_theta = MLP(n=64, n_layers=3, in_dim=3, out_dim=3)
+        S_theta = MLP_normals(n=64, n_layers=3, in_dim=3, out_dim=3)
         S_theta.to(device=device)
         if config["surface"] == "heightfield":
             S_theta.load_state_dict(torch.load("../data/model_hf_normal.pth", weights_only=True, map_location=device))
@@ -479,7 +408,7 @@ def train_strong_form(l_model, device, n, size_layer, n_layers):
         S_theta.requires_grad_(True)
 
     elif config["NN"] == "withNN_mesh":
-        S_theta = MLP(n=64, n_layers=3, in_dim=3, out_dim=3)
+        S_theta = MLP_normals(n=64, n_layers=3, in_dim=3, out_dim=3)
         S_theta.to(device=device)
         if config["surface"] == "heightfield":
             S_theta.load_state_dict(torch.load("../data/model_hf_normal_mesh.pth", weights_only=True, map_location=device))
@@ -497,23 +426,20 @@ def train_strong_form(l_model, device, n, size_layer, n_layers):
 
             v_cart = sample_in_domain(n)
             v_cart = torch.tensor(v_cart, dtype=torch.float32, device=device).requires_grad_(True)
-            
-            v_emb = get_embedding_torch(v_cart)
-            v_emb = v_emb.requires_grad_(True)
 
-            laplacian_pred = get_surface_laplacian(l_model, v_cart, v_emb, S_theta)
+            laplacian_pred = get_surface_laplacian(l_model, v_cart, S_theta)
 
             true_lap = laplacian_f(v_cart)
 
             loss = torch.linalg.norm(laplacian_pred - true_lap, 2)**2
             
             ## DIRICHLET CONDITION ##
-            if not config["debug"] and config["bc"] == "dirichlet" and config["surface"] != "ellipsoid":
+            if config["bc"] == "dirichlet" and config["surface"] != "ellipsoid":
                 bdry_points = get_bdry_points(n, device)
                 loss = loss + 100*(torch.linalg.norm(l_model(bdry_points).squeeze() - f_torch(bdry_points), 2)**2)  # Dirichlet boundary condition
 
             ## NEUMANN CONDITION ##
-            elif not config["debug"] and config["bc"] == "neumann" and config["surface"] != "ellipsoid":
+            elif config["bc"] == "neumann" and config["surface"] != "ellipsoid":
                 bdry_points = get_bdry_points(n, device)
 
                 grad_bdry = torch.autograd.grad(l_model(bdry_points).squeeze(), bdry_points, torch.ones_like(bdry_points[:, 0]), create_graph=True, retain_graph=True)[0]

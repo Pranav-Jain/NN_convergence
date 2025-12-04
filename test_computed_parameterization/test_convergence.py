@@ -13,6 +13,9 @@ from scipy.sparse.linalg import spsolve
 import json
 import sys
 
+sys.path.append('../src')
+from siren import MLP, MLP_normals
+
 with open("config.json", "r") as f:
     config = json.load(f)
 
@@ -61,54 +64,6 @@ def laplacian_f_np(v):
 
     return lap_f.squeeze()
     
-# Deine SIREN layer
-class SIRENLayer(nn.Module):
-    def __init__(self, in_dim, out_dim, is_first=False, w0=30.0):
-        super().__init__()
-        self.is_first = is_first
-        self.in_dim = in_dim
-        self.w0 = w0
-        self.linear = nn.Linear(in_dim, out_dim)
-        self.init_weights()
-
-    def init_weights(self):
-        with torch.no_grad():
-            if self.is_first:
-                # first layer: U(-1/in_dim, 1/in_dim)
-                self.linear.weight.uniform_(-1 / self.in_dim, 1 / self.in_dim)
-            else:
-                # deeper layers: U(-sqrt(6/in_dim)/w0, sqrt(6/in_dim)/w0)
-                bound = np.sqrt(6 / self.in_dim) / self.w0
-                self.linear.weight.uniform_(-bound, bound)
-            self.linear.bias.fill_(0.0)
-
-    def forward(self, x):
-        return torch.sin(self.w0 * self.linear(x))
-    
-# Define MLP with SIREN layers
-class MLP(nn.Module):
-    def __init__(self, n=512, n_layers=3, in_dim=3, out_dim=1, w0=30.0):
-        super().__init__()
-        layers = []
-
-        # First SIREN layer (high-frequency)
-        layers.append(SIRENLayer(in_dim, n, is_first=True, w0=w0))
-
-        # Hidden layers
-        for _ in range(n_layers):
-            layers.append(SIRENLayer(n, n, is_first=False, w0=1.0))
-
-        self.trunk = nn.Sequential(*layers)
-        self.final_layer = nn.Linear(n, out_dim, bias=True)
-        nn.init.xavier_uniform_(self.final_layer.weight)
-        nn.init.zeros_(self.final_layer.bias)
-
-    def forward(self, x):
-        features = self.trunk(x)
-        output = self.final_layer(features)
-
-        return output.squeeze()
-
 def get_random_points(v_mesh, f_mesh, n):
     # Sample points on mesh
     v_mesh_rdm, _, _ = gpy.random_points_on_mesh(v_mesh, f_mesh, n, return_indices=True)
@@ -216,9 +171,9 @@ def train_strong_form(l_model, device, n, size_layer, n_layers):
     optimizer = torch.optim.Adam(l_model.parameters(), lr=config["architecture"]["lr"])
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.5, patience=config["architecture"]["scheduler_patience"])
 
-    S_theta = MLP(n=256, n_layers=5, in_dim=3, out_dim=3)
+    S_theta = MLP_normals(n=64, n_layers=5, in_dim=3, out_dim=3)
     S_theta.to(device=device)
-    S_theta.load_state_dict(torch.load(f"../data/model_{config['surface']}.pth", weights_only=True, map_location=device))
+    S_theta.load_state_dict(torch.load(f"../data/model_{config['surface']}_normal.pth", weights_only=True, map_location=device))
     S_theta.requires_grad_(True)
     
     losses = []
@@ -356,9 +311,9 @@ def plot():
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    S_theta = MLP(n=256, n_layers=5, in_dim=3, out_dim=3)
+    S_theta = MLP_normals(n=64, n_layers=5, in_dim=3, out_dim=3)
     S_theta.to(device=device)
-    S_theta.load_state_dict(torch.load(f"../data/model_{config['surface']}.pth", weights_only=True, map_location=device))
+    S_theta.load_state_dict(torch.load(f"../data/model_{config['surface']}_normal.pth", weights_only=True, map_location=device))
     S_theta.requires_grad_(True)
 
     v_mesh, f_mesh = gpy.read_mesh(f"../data/{config['surface']}.obj")
