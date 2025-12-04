@@ -8,6 +8,9 @@ import math
 import torch.nn as nn
 import sys
 
+sys.path.append('../src')
+from siren import MLP_normals
+
 def get_random_points(v_mesh, f_mesh, v_emb, f_emb, n):
     # Sample points on embedding mesh
     v_emb_rdm, ind_emb_rdm, bary_emb_rdm = gpy.random_points_on_mesh(
@@ -35,55 +38,6 @@ def get_interpolated_values(f, v, v_mesh, f_mesh):
     # Weighted sum
     f_v = (face_vals * bary[:, :, None]).sum(axis=1)
     return f_v
-
-
-# Create a MLP model with SIREN layers
-class SIRENLayer(nn.Module):
-    def __init__(self, in_dim, out_dim, is_first=False, w0=30.0):
-        super().__init__()
-        self.is_first = is_first
-        self.in_dim = in_dim
-        self.w0 = w0
-        self.linear = nn.Linear(in_dim, out_dim)
-        self.init_weights()
-
-    def init_weights(self):
-        with torch.no_grad():
-            if self.is_first:
-                # first layer: U(-1/in_dim, 1/in_dim)
-                self.linear.weight.uniform_(-1 / self.in_dim, 1 / self.in_dim)
-            else:
-                # deeper layers: U(-sqrt(6/in_dim)/w0, sqrt(6/in_dim)/w0)
-                bound = np.sqrt(6 / self.in_dim) / self.w0
-                self.linear.weight.uniform_(-bound, bound)
-            self.linear.bias.fill_(0.0)
-
-    def forward(self, x):
-        return torch.sin(self.w0 * self.linear(x))
-    
-class MLP(nn.Module):
-    def __init__(self, n=512, n_layers=3, in_dim=3, out_dim=1, w0=30.0):
-        super().__init__()
-        layers = []
-
-        # First SIREN layer (high-frequency)
-        layers.append(SIRENLayer(in_dim, n, is_first=True, w0=w0))
-
-        # Hidden layers
-        for _ in range(n_layers):
-            layers.append(SIRENLayer(n, n, is_first=False, w0=1.0))
-
-        self.trunk = nn.Sequential(*layers)
-
-        self.final_layer = nn.Linear(n, out_dim, bias=True)
-        nn.init.xavier_uniform_(self.final_layer.weight)
-        nn.init.zeros_(self.final_layer.bias)
-
-    def forward(self, x):
-        features = self.trunk(x)
-        output = self.final_layer(features)
-
-        return output.squeeze()
     
 def sample_in_sphere(n):
     vec = np.random.uniform(-1, 1, (n, 3))
@@ -108,7 +62,8 @@ def loss(model, v, true_n=None):
         n_true[:, 2] = 2*v[:, 2]/1.0
         true_n = n_true / torch.linalg.norm(n_true, dim=1, keepdim=True)
 
-    l = torch.mean(torch.linalg.norm(n_pred - true_n, ord=2, axis=1)**2)
+    cos = torch.sum(n_pred * true_n, dim=1)
+    l = torch.sum((1 - cos)**2)
 
     return l
 
@@ -118,7 +73,7 @@ def train_exact(n_layers = 3, size_layer = 64, lr=1e-4, max_iter=500000, n_sampl
     print(f"Using device: {device}")
 
     # Create the model
-    model = MLP(n=size_layer, n_layers=n_layers, in_dim=3, out_dim=3)
+    model = MLP_normals(n=size_layer, n_layers=n_layers, in_dim=3, out_dim=3)
     model.to(device=device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -145,7 +100,7 @@ def train_mesh(v_mesh, f_mesh, v_emb, f_emb, n_layers = 3, size_layer = 64, lr=1
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    model = MLP(n=size_layer, n_layers=n_layers, in_dim=3, out_dim=3)
+    model = MLP_normals(n=size_layer, n_layers=n_layers, in_dim=3, out_dim=3)
     model.to(device=device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
