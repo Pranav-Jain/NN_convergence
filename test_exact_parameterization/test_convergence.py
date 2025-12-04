@@ -398,7 +398,7 @@ def train_strong_form(l_model, device, n, size_layer, n_layers):
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.5, patience=config["architecture"]["scheduler_patience"])
 
     if config["NN"] == "withNN":
-        S_theta = MLP_normals(n=64, n_layers=3, in_dim=3, out_dim=3)
+        S_theta = MLP_normals(n=64, n_layers=5, in_dim=3, out_dim=3)
         S_theta.to(device=device)
         if config["surface"] == "heightfield":
             S_theta.load_state_dict(torch.load("../data/model_hf_normal.pth", weights_only=True, map_location=device))
@@ -408,7 +408,7 @@ def train_strong_form(l_model, device, n, size_layer, n_layers):
         S_theta.requires_grad_(True)
 
     elif config["NN"] == "withNN_mesh":
-        S_theta = MLP_normals(n=64, n_layers=3, in_dim=3, out_dim=3)
+        S_theta = MLP_normals(n=64, n_layers=5, in_dim=3, out_dim=3)
         S_theta.to(device=device)
         if config["surface"] == "heightfield":
             S_theta.load_state_dict(torch.load("../data/model_hf_normal_mesh.pth", weights_only=True, map_location=device))
