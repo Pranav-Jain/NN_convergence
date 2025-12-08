@@ -68,7 +68,7 @@ def loss(model, v, true_n=None):
     return l
 
 # Train using exact normals
-def train_exact(n_layers = 3, size_layer = 64, lr=1e-4, max_iter=500000, n_samples=10000, tol=1e-8):
+def train_exact(n_layers = 5, size_layer = 64, lr=1e-4, max_iter=500000, n_samples=10000, tol=1e-8):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
@@ -96,7 +96,7 @@ def train_exact(n_layers = 3, size_layer = 64, lr=1e-4, max_iter=500000, n_sampl
     return model
 
 # Train using mesh normals
-def train_mesh(v_mesh, f_mesh, v_emb, f_emb, n_layers = 3, size_layer = 64, lr=1e-4, max_iter=500000, n_samples=10000, tol=1e-8):
+def train_mesh(v_mesh, f_mesh, v_emb, f_emb, n_layers = 5, size_layer = 64, lr=1e-4, max_iter=500000, n_samples=10000, tol=1e-8):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
@@ -137,7 +137,8 @@ if __name__ == "__main__":
         # Save the model
         torch.save(model.state_dict(), "../data/model_ellipsoid_normal.pth")
     elif sys.argv[1] == "mesh":
-        v_emb, f_emb = gpy.read_mesh("../data/sphere_ellipsoid.obj")
+        v_emb, f_emb = gpy.icosphere(n=7)
+        print(f"Embedding mesh: {v_emb.shape[0]} vertices, {f_emb.shape[0]} faces")
 
         v_mesh = np.copy(v_emb)
         v_mesh[:, 0] = v_mesh[:, 0] * 3.0
