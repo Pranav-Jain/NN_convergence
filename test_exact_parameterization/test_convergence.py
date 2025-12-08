@@ -15,6 +15,7 @@ import pandas as pd
 
 sys.path.append('../src')
 from siren import MLP, MLP_normals
+from surface_laplacian import get_surface_laplacian
 
 with open("config.json", "r") as f:
     config = json.load(f)
@@ -329,54 +330,6 @@ def get_normals(v, S_theta=None):
 
     return n
 
-def get_surface_laplacian(model, v_cart, S_theta=None):
-
-    def model_scalar(v_):
-        return model(v_).view(-1).requires_grad_(True)  # Ensure scalar output
-        
-    u_pred = model_scalar(v_cart)
-
-    n = get_normals(v_cart, S_theta)
-
-    grad_f = torch.autograd.grad(u_pred, v_cart, torch.ones_like(u_pred), create_graph=True, retain_graph=True)[0]
-    
-    # Surface gradient (tangential component)
-    grad_f_surf = grad_f - torch.sum(grad_f * n, dim=1, keepdim=True) * n
-
-    # Compute divergence of surface gradient
-    def compute_divergence(grad_, v_):
-        # Compute derivatives of each component of grad_f_surf
-        div_x = torch.autograd.grad(grad_[:, 0], v_, torch.ones_like(grad_[:, 0]), create_graph=True, retain_graph=True)[0]
-        div_x = div_x - torch.sum(div_x * n, dim=1, keepdim=True) * n
-        div_y = torch.autograd.grad(grad_[:, 1], v_, torch.ones_like(grad_[:, 1]), create_graph=True, retain_graph=True)[0]
-        div_y = div_y - torch.sum(div_y * n, dim=1, keepdim=True) * n
-        div_z = torch.autograd.grad(grad_[:, 2], v_, torch.ones_like(grad_[:, 2]), create_graph=True, retain_graph=True)[0]
-        div_z = div_z - torch.sum(div_z * n, dim=1, keepdim=True) * n
-        
-        # Build Hessian matrix
-        hessian = torch.zeros(v_cart.shape[0], 3, 3).to(v_cart.device)
-        hessian[:, 0, :] = div_x
-        hessian[:, 1, :] = div_y
-        hessian[:, 2, :] = div_z
-
-        # Sum diagonal terms for divergence
-        divF = hessian[:, 0, 0] + hessian[:, 1, 1] + hessian[:, 2, 2]
-
-        return divF, hessian
-
-    div_grad_f_surf, hessians = compute_divergence(grad_f_surf, v_cart)
-
-    # Compute Hessian applied to normal: H n
-    hessian_dot_n = torch.bmm(hessians, n.unsqueeze(-1)).squeeze()
-
-    # Compute normal term: n^T (H n)
-    normals_term = torch.sum(n * hessian_dot_n, dim=1)
-
-    # Final Laplace-Beltrami operator
-    lap_beltrami = div_grad_f_surf - normals_term
-
-    return lap_beltrami
-
 def get_bdry_points(n, device):
     if config["surface"] == "heightfield":
         b = torch.tensor(np.random.uniform(config["domain"]["min"], config["domain"]["max"], (n))).to(device=device).requires_grad_(True).float()
@@ -427,7 +380,8 @@ def train_strong_form(l_model, device, n, size_layer, n_layers):
             v_cart = sample_in_domain(n)
             v_cart = torch.tensor(v_cart, dtype=torch.float32, device=device).requires_grad_(True)
 
-            laplacian_pred = get_surface_laplacian(l_model, v_cart, S_theta)
+            normals = get_normals(v_cart, S_theta)
+            laplacian_pred = get_surface_laplacian(l_model, v_cart, normals)
 
             true_lap = laplacian_f(v_cart)
 

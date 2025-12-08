@@ -11,10 +11,12 @@ import torch.nn as nn
 import scipy
 from scipy.sparse.linalg import spsolve
 import json
+import pandas as pd
 import sys
 
 sys.path.append('../src')
 from siren import MLP, MLP_normals
+from surface_laplacian import get_surface_laplacian
 
 with open("config.json", "r") as f:
     config = json.load(f)
@@ -95,78 +97,6 @@ def get_normals(v, S_theta=None):
 
     return n
 
-def get_surface_laplacian(model, v_cart, S_theta=None):
-
-    def model_scalar(v_):
-        return model(v_).view(-1).requires_grad_(True)  # Ensure scalar output
-    
-    f_ = model_scalar(v_cart)
-
-    n = get_normals(v_cart, S_theta)
-
-    grad_f = torch.autograd.grad(f_, v_cart, torch.ones_like(f_), create_graph=True, retain_graph=True)[0]
-
-    # Surface gradient (tangential component)
-    grad_f_surf = grad_f - torch.sum(grad_f * n, dim=1, keepdim=True) * n
-
-    # Compute divergence of surface gradient
-    def compute_divergence(grad_, v_):
-        # Compute derivatives of each component of grad_f_surf
-        div_x = torch.autograd.grad(grad_[:, 0], v_, torch.ones_like(grad_[:, 0]), create_graph=True, retain_graph=True)[0]
-        div_x = div_x - torch.sum(div_x * n, dim=1, keepdim=True) * n
-        div_y = torch.autograd.grad(grad_[:, 1], v_, torch.ones_like(grad_[:, 1]), create_graph=True, retain_graph=True)[0]
-        div_y = div_y - torch.sum(div_y * n, dim=1, keepdim=True) * n
-        div_z = torch.autograd.grad(grad_[:, 2], v_, torch.ones_like(grad_[:, 2]), create_graph=True, retain_graph=True)[0]
-        div_z = div_z - torch.sum(div_z * n, dim=1, keepdim=True) * n
-        
-        # Build Hessian matrix
-        hessian = torch.zeros(v_cart.shape[0], 3, 3).to(v_cart.device)
-        hessian[:, 0, :] = div_x
-        hessian[:, 1, :] = div_y
-        hessian[:, 2, :] = div_z
-
-        # Sum diagonal terms for divergence
-        divF = hessian[:, 0, 0] + hessian[:, 1, 1] + hessian[:, 2, 2]
-
-        return divF, hessian
-
-    div_grad_f_surf, hessians = compute_divergence(grad_f_surf, v_cart)
-
-    # Compute Hessian applied to normal: H n
-    hessian_dot_n = torch.bmm(hessians, n.unsqueeze(-1)).squeeze()
-
-    # Compute normal term: n^T (H n)
-    normals_term = torch.sum(n * hessian_dot_n, dim=1)
-
-    # Final Laplace-Beltrami operator
-    lap_beltrami = div_grad_f_surf - normals_term
-
-    return lap_beltrami
-
-def get_bdry_points(n, device):
-    if config["surface"] == "hemisphere":
-        phi = torch.rand(n, device=device) * 2 * np.pi - np.pi
-        theta = torch.ones_like(phi, device=device) * np.pi/2
-        theta[n//2:] = 0.0
-        # theta = torch.zeros_like(phi, device=device)
-        r = torch.ones_like(phi, device=device)
-        bdry_points = torch.stack([r, theta, phi], dim=1)
-
-    elif config["surface"] == "heightfield":
-        b = torch.tensor(np.random.uniform(config["domain"]["min"], config["domain"]["max"], (n))).to(device=device).requires_grad_(True).float()
-        b1 = torch.stack([b, torch.ones_like(b)*config["domain"]["max"]], dim=1)
-        b2 = torch.stack([b, torch.ones_like(b)*config["domain"]["min"]], dim=1)
-        b3 = torch.stack([torch.ones_like(b)*config["domain"]["max"], b], dim=1)
-        b4 = torch.stack([torch.ones_like(b)*config["domain"]["min"], b], dim=1)
-        bdry_points = torch.cat((b1, b2, b3, b4), dim=0)
-
-        z = 0.5 * (bdry_points[:, 0]**2 + bdry_points[:, 1]**2)
-
-        bdry_points = torch.stack([bdry_points[:, 0], bdry_points[:, 1], z], dim=1)
-
-    return bdry_points.requires_grad_(True)
-
-
 def train_strong_form(l_model, device, n, size_layer, n_layers):
     optimizer = torch.optim.Adam(l_model.parameters(), lr=config["architecture"]["lr"])
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=0.5, patience=config["architecture"]["scheduler_patience"])
@@ -188,18 +118,30 @@ def train_strong_form(l_model, device, n, size_layer, n_layers):
             idx = torch.randint(0, int(1e6), (n,), device=device)
             v_cart = v_mesh_global[idx]
 
-            laplacian_pred = get_surface_laplacian(l_model, v_cart, S_theta)
+            normals = get_normals(v_cart, S_theta)
+            laplacian_pred = get_surface_laplacian(l_model, v_cart, normals)
 
             true_lap = laplacian_f(v_cart)
             true_lap = true_lap - mean_f
 
             loss = torch.linalg.norm(laplacian_pred - true_lap, 2)**2
 
-            # TODO: Add boundary conditions
+            ### BOUNDARY CONDITIONS ###
+            if len(boundary_edges) > 0:
+                ## DIRICHLET BC ##
+                if config["bc"] == "dirichlet":
 
-            if config["debug"]:
-                print(f"Loss: {loss.item()}")
-                exit()
+                    # Get boundary points
+                    bdry_edges_rdm = boundary_edges[torch.randint(0, boundary_edges.shape[0], (n,), device=device)]
+                    w = torch.rand((n, 1), device=device) # linear interpolation weights
+                    bdry_points = (1 - w) * v_mesh_torch[bdry_edges_rdm[:, 0]] + w * v_mesh_torch[bdry_edges_rdm[:, 1]]
+
+                    u_bdry_pred = l_model(bdry_points).squeeze()
+                    w = w.squeeze()
+                    u_bdry_true = (1 - w) * u_mesh_torch[bdry_edges_rdm[:, 0]] + w * u_mesh_torch[bdry_edges_rdm[:, 1]]
+
+                    loss_bdry = torch.linalg.norm(u_bdry_pred - u_bdry_true, 2)**2
+                    loss = loss + 100*loss_bdry
             
             loss.backward()
             if not torch.isnan(loss):
@@ -261,13 +203,12 @@ def plot():
     dof = []
     losses = []
 
-    # V, _ = sample_in_domain(100000)
     V = v_mesh
 
     for file in filenames:
         print(file)
-        n_layers = int(file.split("_")[-2])
-        size_layer = int(file.split("_")[-3])
+        n_layers = int(file.split("_")[-1].split(".")[0])
+        size_layer = int(file.split("_")[-2])
 
         model = MLP(n=size_layer, n_layers=n_layers, in_dim=3, out_dim=1)
         model.to(device=device)
@@ -291,6 +232,21 @@ def plot():
 
     dof_sorted = np.sort(dof)
     losses_sorted = losses[np.argsort(dof)]
+
+    # Create DataFrame for this run
+    example_name = f"example{sys.argv[1]}"
+    output_path = f"{save_dir}/output.csv"
+    data = pd.DataFrame({
+        "dof": dof_sorted,
+        example_name: losses_sorted
+    })
+    if sys.argv[1] == "1":
+        data.to_csv(output_path, index=False)
+    else:
+        existing = pd.read_csv(output_path)
+        merged = pd.merge(existing, data, on="dof", how="outer")
+        merged = merged.sort_values(by="dof")
+        merged.to_csv(output_path, index=False)
 
     x = dof_sorted
     y = losses_sorted
@@ -335,6 +291,12 @@ if __name__ == "__main__":
     # Discrete surface Laplacian of u
     u_mesh = spsolve(L, M @ lap_f_)   # equivalent to -M^{-1} L u
 
+    # Get boundary edges
+    boundary_edges = gpy.boundary_edges(f_mesh)
+    boundary_edges = torch.tensor(boundary_edges, dtype=torch.long, device=device)
+
+    v_mesh_torch = torch.tensor(v_mesh, dtype=torch.float32, device=device).requires_grad_(True)
+    u_mesh_torch = torch.tensor(u_mesh, dtype=torch.float32, device=device).requires_grad_(True)
     
     save_dir = f"poisson_results/{config['surface']}/{config['bc']}/domain_{config['domain']['min']}to{config['domain']['max']}"
 
