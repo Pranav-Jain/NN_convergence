@@ -1,0 +1,32 @@
+{
+    "individual_results": [
+        {
+            "example": "example1",
+            "slope": -1.4853287200309266,
+            "correlation": -0.8441714065557573,
+            "converged": 1
+        },
+        {
+            "example": "example2",
+            "slope": -1.1594752003550521,
+            "correlation": -0.9103291026475004,
+            "converged": 1
+        },
+        {
+            "example": "example3",
+            "slope": -0.7179054699700581,
+            "correlation": -0.9129071706245081,
+            "converged": 1
+        },
+        {
+            "example": "example4",
+            "slope": -0.2332208780851292,
+            "correlation": -0.8763502453041591,
+            "converged": 0
+        }
+    ],
+    "num_converged": 3,
+    "total_examples": 4,
+    "fraction_converged": 0.75,
+    "overall_converged": 0
+}
