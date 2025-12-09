@@ -151,7 +151,7 @@ To train mesh normals on arbitrary mesh, use the script [train_NN_mesh_normals.p
 ```sh
 python3 train_NN_mesh_normals.py <meshname>
 ```
-where <meshname>.obj is the mesh file present in the [data](https://github.com/Pranav-Jain/NN_convergence/tree/main/data) directory.
+where _meshname.obj_ is the mesh file present in the [data](https://github.com/Pranav-Jain/NN_convergence/tree/main/data) directory.
 
 ## Pretrained models
 We test using multiple analytical functions for all experiments. The pretrained models are stored in __poisson_results__ for each experiment. The models are trained using the `operation="train"` in the config file.
