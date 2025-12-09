@@ -35,7 +35,7 @@ def loss(model, v, true_n):
 
     return loss
 
-def train_mesh(v_mesh, f_mesh, n_layers = 5, size_layer = 64, lr=1e-4, max_iter=1000000, n_samples=1000, tol=1e-5):
+def train_mesh(v_mesh, f_mesh, n_layers = 5, size_layer = 64, lr=1e-4, max_iter=5000000, n_samples=1000, tol=1e-10):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
