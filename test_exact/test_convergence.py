@@ -23,7 +23,7 @@ def relative_l2_loss(pred, true):
     return np.linalg.norm(pred - true, 2) / (np.linalg.norm(true, 2))
 
 # Define the functions
-def f_2d(v):
+def u_torch(v):
     if config["dimension"] == 2: # 2D case (on a square)
         x, y = v[:, 0], v[:, 1]
         if sys.argv[1] == "1":
@@ -76,39 +76,39 @@ def f_2d(v):
     return f.squeeze()
 
 # Laplacian of f
-def laplacian_f_2d(v):
+def rhs(v):
     if config["dimension"] == 2:
         x, y = v[:, 0], v[:, 1]
         if sys.argv[1] == "1":
-            lap_f = torch.cos(y)*torch.sin(x)
+            lap_u = torch.cos(y)*torch.sin(x)
         elif sys.argv[1] == "2":
-            lap_f = torch.cos(np.pi*y)*torch.sin(np.pi*x)
+            lap_u = torch.cos(np.pi*y)*torch.sin(np.pi*x)
         elif sys.argv[1] == "3":
-            lap_f = torch.cos(3*y)*torch.sin(2*x)
+            lap_u = torch.cos(3*y)*torch.sin(2*x)
         elif sys.argv[1] == "4":
-            lap_f = torch.cos(20*y)*torch.sin(10*x)
+            lap_u = torch.cos(20*y)*torch.sin(10*x)
         elif sys.argv[1] == "5":
-            lap_f = torch.cos(20*np.pi*y)*torch.sin(10*np.pi*x)
+            lap_u = torch.cos(20*np.pi*y)*torch.sin(10*np.pi*x)
         elif sys.argv[1] == "6":
-            lap_f = (138*x) / 3090.0
+            lap_u = (138*x) / 3090.0
         elif sys.argv[1] == "7":
-            lap_f = ((138*x)-(860*y**3)) / 137250.0
+            lap_u = ((138*x)-(860*y**3)) / 137250.0
         elif sys.argv[1] == "8":
-            lap_f = (6*(35+324*y)) / 43125.0
+            lap_u = (6*(35+324*y)) / 43125.0
         elif sys.argv[1] == "9":
-            lap_f = ((-15300*x**3)+468*y) / 2400375.0
+            lap_u = ((-15300*x**3)+468*y) / 2400375.0
         elif sys.argv[1] == "10":
-            lap_f = (-56*((685*x**6)+(702*y**7))) / 1333984375.0
+            lap_u = (-56*((685*x**6)+(702*y**7))) / 1333984375.0
         elif sys.argv[1] == "11":
-            lap_f = torch.sin(np.pi*x)*torch.sin(np.pi*y)
+            lap_u = torch.sin(np.pi*x)*torch.sin(np.pi*y)
         elif sys.argv[1] == "12":
-            lap_f = torch.sin(2*np.pi*x)*torch.sin(np.pi*y)
+            lap_u = torch.sin(2*np.pi*x)*torch.sin(np.pi*y)
         elif sys.argv[1] == "13":
-            lap_f = torch.sin(2*np.pi*x)*torch.sin(3*np.pi*y)
+            lap_u = torch.sin(2*np.pi*x)*torch.sin(3*np.pi*y)
         elif sys.argv[1] == "14":
-            lap_f = torch.sin(5*np.pi*x)*torch.sin(5*np.pi*y)
+            lap_u = torch.sin(5*np.pi*x)*torch.sin(5*np.pi*y)
         elif sys.argv[1] == "15":
-            lap_f = torch.sin(8*np.pi*x)*torch.sin(10*np.pi*y)
+            lap_u = torch.sin(8*np.pi*x)*torch.sin(10*np.pi*y)
         else:
             raise NotImplementedError()
     
@@ -116,20 +116,20 @@ def laplacian_f_2d(v):
         r, theta, phi = v[:, 0], v[:, 1], v[:, 2]
 
         if sys.argv[1] == "1":
-            lap_f = torch.cos(theta)
+            lap_u = torch.cos(theta)
         elif sys.argv[1] == "2":
-            lap_f = torch.sin(theta)*torch.cos(phi)
+            lap_u = torch.sin(theta)*torch.cos(phi)
         elif sys.argv[1] == "3":
-            lap_f = torch.sin(theta)*torch.sin(phi)
+            lap_u = torch.sin(theta)*torch.sin(phi)
         elif sys.argv[1] == "4":
-            lap_f = -12 * torch.sin(theta)**2 * torch.cos(theta) * torch.cos(2*phi)
+            lap_u = -12 * torch.sin(theta)**2 * torch.cos(theta) * torch.cos(2*phi)
         else:
             raise NotImplementedError()
     
-    return lap_f.squeeze()
+    return lap_u.squeeze()
 
 # Numpy version of f for FEM
-def f_2d_numpy(v):
+def u_numpy(v):
     if config["dimension"] == 2:
         x, y = v[:, 0], v[:, 1]
         if sys.argv[1] == "1":
@@ -193,7 +193,7 @@ def test_FEM(nx, ny, return_memory=False):
         L = gpy.cotangent_laplacian(V, F)
         M = gpy.massmatrix(V, F)
 
-        lap_f = -M@laplacian_f_2d(torch.Tensor(V).to(device=device)).detach().cpu().numpy()
+        lap_u = -M@rhs(torch.Tensor(V).to(device=device)).detach().cpu().numpy()
 
         # Apply Dirichlet Boundary
         # Section 4.3 - https://web.stanford.edu/class/energy281/FiniteElementMethod.pdf
@@ -201,10 +201,10 @@ def test_FEM(nx, ny, return_memory=False):
         if config["bc"] == "dirichlet":
             L[BV, :] = 0.0
             L[BV, BV] = 1.0
-            lap_f[BV] = f_2d_numpy(V[BV])
+            lap_u[BV] = u_numpy(V[BV])
 
-        u = sp.sparse.linalg.spsolve(L, lap_f)
-        l2_loss = relative_l2_loss(u, f_2d_numpy(V))
+        u = sp.sparse.linalg.spsolve(L, lap_u)
+        l2_loss = relative_l2_loss(u, u_numpy(V))
 
     print(f"FEM Loss: {l2_loss}")
 
@@ -265,7 +265,7 @@ def train_strong_form_sphere(dim, max_iter, size_layer, n_layers):
         normal = (v_mesh_rnd_cart - center) / r  # unit normals
         laplacian_pred = get_surface_laplacian(model, v_mesh_rnd_cart, normal)
 
-        f_v = laplacian_f_2d(v_mesh_rnd)
+        f_v = rhs(v_mesh_rnd)
 
         loss = torch.linalg.norm(laplacian_pred - f_v, 2)**2
         
@@ -286,7 +286,7 @@ def train_strong_form_sphere(dim, max_iter, size_layer, n_layers):
     v_mesh_rnd_cart = torch.tensor(v_mesh_rnd_cart, dtype=torch.float32).to(device=device)
     v_mesh_rnd_sp = get_spherical_coordinates_torch(v_mesh_rnd_cart, center, r)
 
-    true = f_2d(v_mesh_rnd_sp).detach().cpu().numpy()
+    true = u_torch(v_mesh_rnd_sp).detach().cpu().numpy()
     pred = model(v_mesh_rnd_sp).squeeze().detach().cpu().numpy()
 
     # Plotting loss curve
@@ -329,8 +329,8 @@ def train_strong_form(dim, max_iter, size_layer, n_layers): # for square domain
         b3 = torch.stack([torch.ones_like(b)*config["domain"]["max"], b], dim=1)
         b4 = torch.stack([torch.ones_like(b)*config["domain"]["min"], b], dim=1)
 
-        true = laplacian_f_2d(x)
-        pred = f_2d(x).squeeze()
+        true = rhs(x)
+        pred = u_torch(x).squeeze()
 
         grad_pred = torch.autograd.grad(pred, x, torch.ones_like(pred), create_graph=True)[0]
         
@@ -360,10 +360,10 @@ def train_strong_form(dim, max_iter, size_layer, n_layers): # for square domain
         pred_b4 = model(b4).squeeze()
 
         if config["bc"] == "dirichlet":
-            temp = (torch.linalg.norm(pred_b1 - f_2d(b1), 2)**2)/b1.shape[0] 
-            temp += (torch.linalg.norm(pred_b2 - f_2d(b2), 2)**2)/b2.shape[0]
-            temp += (torch.linalg.norm(pred_b3 - f_2d(b3), 2)**2)/b3.shape[0]
-            temp += (torch.linalg.norm(pred_b4 - f_2d(b4), 2)**2)/b4.shape[0]
+            temp = (torch.linalg.norm(pred_b1 - u_torch(b1), 2)**2)/b1.shape[0] 
+            temp += (torch.linalg.norm(pred_b2 - u_torch(b2), 2)**2)/b2.shape[0]
+            temp += (torch.linalg.norm(pred_b3 - u_torch(b3), 2)**2)/b3.shape[0]
+            temp += (torch.linalg.norm(pred_b4 - u_torch(b4), 2)**2)/b4.shape[0]
             loss += 100*temp
         
         elif config["bc"] == "neumann":
@@ -372,10 +372,10 @@ def train_strong_form(dim, max_iter, size_layer, n_layers): # for square domain
             grad_pred_b3 = torch.autograd.grad(pred_b3, b3, torch.ones_like(pred_b3), create_graph=True)[0]
             grad_pred_b4 = torch.autograd.grad(pred_b4, b4, torch.ones_like(pred_b4), create_graph=True)[0]
             
-            true_b1 = f_2d(b1)
-            true_b2 = f_2d(b2)
-            true_b3 = f_2d(b3)
-            true_b4 = f_2d(b4)
+            true_b1 = u_torch(b1)
+            true_b2 = u_torch(b2)
+            true_b3 = u_torch(b3)
+            true_b4 = u_torch(b4)
             grad_true_b1 = torch.autograd.grad(true_b1, b1, torch.ones_like(true_b1), create_graph=True)[0]
             grad_true_b2 = torch.autograd.grad(true_b2, b2, torch.ones_like(true_b2), create_graph=True)[0]
             grad_true_b3 = torch.autograd.grad(true_b3, b3, torch.ones_like(true_b3), create_graph=True)[0]
@@ -425,7 +425,7 @@ def train_strong_form(dim, max_iter, size_layer, n_layers): # for square domain
 
     # Plotting predictions
     x = torch.tensor(np.random.uniform(config["domain"]["min"], config["domain"]["max"], (10000, 2))).to(device=device).float()
-    true = f_2d(x).detach().cpu().numpy()
+    true = u_torch(x).detach().cpu().numpy()
     pred = model(x).squeeze().detach().cpu().numpy()
     x = x.detach().cpu().numpy()
     fig = plt.figure()
@@ -475,14 +475,14 @@ def plot():
 
     if config["dimension"] == 2:
         x = torch.tensor(np.random.uniform(config["domain"]["min"], config["domain"]["max"], (100000, 2))).to(device=device).requires_grad_(True).float()
-        true = f_2d(x).detach().cpu().numpy()
+        true = u_torch(x).detach().cpu().numpy()
     elif config["dimension"] == 3:
         r = 1.0
         center = torch.zeros(3).to(device=device).requires_grad_(True)
         x_cart = sample_in_sphere(100000, r)
         x = torch.tensor(x_cart, dtype=torch.float32).to(device=device).requires_grad_(True)
         x_sp = get_spherical_coordinates_torch(x, center, r)
-        true = f_2d(x_sp).detach().cpu().numpy()
+        true = u_torch(x_sp).detach().cpu().numpy()
 
     for file in filenames:
         # get layer size and n_layers from filename
@@ -535,16 +535,16 @@ def plot():
             M_mesh = gpy.massmatrix(v_mesh, f_mesh)
             M_mesh = sp.sparse.csc_matrix(M_mesh)
             v_mesh_sp = get_spherical_coordinates(v_mesh, center.detach().cpu().numpy(), r)
-            f_ = laplacian_f_2d(torch.tensor(v_mesh_sp, dtype=torch.float32).to(device=device)).squeeze().detach().cpu().numpy()
+            f_ = rhs(torch.tensor(v_mesh_sp, dtype=torch.float32).to(device=device)).squeeze().detach().cpu().numpy()
             
             lap_mesh = gpy.cotangent_laplacian(v_mesh, f_mesh)
             u = sp.sparse.linalg.spsolve(lap_mesh, -M_mesh@f_)
 
             # Adjust the constant factor
-            const = np.mean(f_2d_numpy(v_mesh_sp) - u)
+            const = np.mean(u_numpy(v_mesh_sp) - u)
             u = u + const
 
-            l2_loss = relative_l2_loss(u, f_2d_numpy(v_mesh_sp))
+            l2_loss = relative_l2_loss(u, u_numpy(v_mesh_sp))
             fem_losses.append(l2_loss)
             fem_dof.append(v_mesh.shape[0])
 

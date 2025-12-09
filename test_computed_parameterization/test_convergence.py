@@ -24,47 +24,47 @@ with open("config.json", "r") as f:
 usage_msg = "Usage: python test_parameterization.py [1|2|3|...]"
 
 # Interpolate function f on mesh
-def f(v):
+def u_numpy(v):
     f = get_interpolated_values(u_mesh, v, v_mesh, f_mesh)
     return f.squeeze()
 
 # Laplacian of f (torch version)
-def laplacian_f(v):
+def rhs(v):
     x, y, z = v[:, 0], v[:, 1], v[:, 2]
     if sys.argv[1] == "1":
-        lap_f = torch.sin(np.pi*x)*torch.sin(np.pi*y)*torch.sin(np.pi*z)
+        lap_u = torch.sin(np.pi*x)*torch.sin(np.pi*y)*torch.sin(np.pi*z)
     elif sys.argv[1] == "2":
-        lap_f = torch.sin(2*np.pi*x)*torch.sin(-np.pi*y)*torch.sin(-3*np.pi*z)
+        lap_u = torch.sin(2*np.pi*x)*torch.sin(-np.pi*y)*torch.sin(-3*np.pi*z)
     elif sys.argv[1] == "3":
-        lap_f = torch.sin(-3*np.pi*x)*torch.sin(6*np.pi*y)*torch.sin(8*np.pi*z)
+        lap_u = torch.sin(-3*np.pi*x)*torch.sin(6*np.pi*y)*torch.sin(8*np.pi*z)
     elif sys.argv[1] == "4":
-        lap_f = torch.sin(np.pi*x)**2*torch.sin(np.pi*y)*torch.sin(np.pi*z)**3
+        lap_u = torch.sin(np.pi*x)**2*torch.sin(np.pi*y)*torch.sin(np.pi*z)**3
     elif sys.argv[1] == "5":
-        lap_f = torch.sin(np.pi*x)**5*torch.sin(np.pi*y)**(-2)*torch.sin(np.pi*z)
+        lap_u = torch.cos(np.pi*x)**2*torch.sin(np.pi*y)**0.5*torch.cos(np.pi*z)
         
     else:
         raise NotImplementedError()
 
-    return lap_f.squeeze()
+    return lap_u.squeeze()
 
 # Laplacian of f (numpy version)
-def laplacian_f_np(v):
+def rhs_np(v):
     x, y, z = v[:, 0], v[:, 1], v[:, 2]
     if sys.argv[1] == "1":
-        lap_f = np.sin(np.pi*x)*np.sin(np.pi*y)*np.sin(np.pi*z)
+        lap_u = np.sin(np.pi*x)*np.sin(np.pi*y)*np.sin(np.pi*z)
     elif sys.argv[1] == "2":
-        lap_f = np.sin(2*np.pi*x)*np.sin(-np.pi*y)*np.sin(-3*np.pi*z)
+        lap_u = np.sin(2*np.pi*x)*np.sin(-np.pi*y)*np.sin(-3*np.pi*z)
     elif sys.argv[1] == "3":
-        lap_f = np.sin(-3*np.pi*x)*np.sin(6*np.pi*y)*np.sin(8*np.pi*z)
+        lap_u = np.sin(-3*np.pi*x)*np.sin(6*np.pi*y)*np.sin(8*np.pi*z)
     elif sys.argv[1] == "4":
-        lap_f = np.sin(np.pi*x)**2*np.sin(np.pi*y)*np.sin(np.pi*z)**3
+        lap_u = np.sin(np.pi*x)**2*np.sin(np.pi*y)*np.sin(np.pi*z)**3
     elif sys.argv[1] == "5":
-        lap_f = np.sin(np.pi*x)**5*np.sin(np.pi*y)**(-2)*np.sin(np.pi*z)
+        lap_u = np.sin(np.pi*x)**5*np.sin(np.pi*y)**(-2)*np.sin(np.pi*z)
         
     else:
         raise NotImplementedError()
 
-    return lap_f.squeeze()
+    return lap_u.squeeze()
     
 def get_random_points(v_mesh, f_mesh, n):
     # Sample points on mesh
@@ -93,9 +93,7 @@ def sample_in_domain(n):
 
 def get_normals(v, S_theta=None):
     n_pred = S_theta(v)
-    n = n_pred / torch.linalg.norm(n_pred, dim=1, keepdim=True)
-
-    return n
+    return n_pred
 
 def train_strong_form(l_model, device, n, size_layer, n_layers):
     optimizer = torch.optim.Adam(l_model.parameters(), lr=config["architecture"]["lr"])
@@ -121,7 +119,9 @@ def train_strong_form(l_model, device, n, size_layer, n_layers):
             normals = get_normals(v_cart, S_theta)
             laplacian_pred = get_surface_laplacian(l_model, v_cart, normals)
 
-            true_lap = laplacian_f(v_cart)
+            true_lap = rhs(v_cart)
+
+            # Enforce zero-mean RHS
             true_lap = true_lap - mean_f
 
             loss = torch.linalg.norm(laplacian_pred - true_lap, 2)**2
@@ -130,7 +130,6 @@ def train_strong_form(l_model, device, n, size_layer, n_layers):
             if len(boundary_edges) > 0:
                 ## DIRICHLET BC ##
                 if config["bc"] == "dirichlet":
-
                     # Get boundary points
                     bdry_edges_rdm = boundary_edges[torch.randint(0, boundary_edges.shape[0], (n,), device=device)]
                     w = torch.rand((n, 1), device=device) # linear interpolation weights
@@ -142,6 +141,45 @@ def train_strong_form(l_model, device, n, size_layer, n_layers):
 
                     loss_bdry = torch.linalg.norm(u_bdry_pred - u_bdry_true, 2)**2
                     loss = loss + 100*loss_bdry
+
+                elif config["bc"] == "neumann":
+                    # Get boundary points
+                    bdry_edges_rdm = boundary_edges[torch.randint(0, boundary_edges.shape[0], (n,), device=device)]
+                    w = torch.rand((n, 1), device=device) # linear interpolation weights
+                    bdry_points = (1 - w) * v_mesh_torch[bdry_edges_rdm[:, 0]] + w * v_mesh_torch[bdry_edges_rdm[:, 1]]
+
+                    w = w.squeeze()
+                    u_bdry_true = (1 - w) * u_mesh_torch[bdry_edges_rdm[:, 0]] + w * u_mesh_torch[bdry_edges_rdm[:, 1]]
+
+                    bdry_normal_surf = get_normals(bdry_points, S_theta)
+                    # Get normal for neumann by rotating edge to 90 degrees in tangent plane
+                    edge_vec = v_mesh_torch[bdry_edges_rdm[:, 1]] - v_mesh_torch[bdry_edges_rdm[:, 0]]
+                    edge_vec = edge_vec / torch.linalg.norm(edge_vec, dim=1, keepdim=True)
+                    bdry_normal = torch.cross(bdry_normal_surf, edge_vec, dim=1)
+                    bdry_normal = bdry_normal / torch.linalg.norm(bdry_normal, dim=1, keepdim=True)
+
+                    # ps.init()
+                    # ps.register_point_cloud("Boundary Points", bdry_points.detach().cpu().numpy())
+                    # ps.get_point_cloud("Boundary Points").add_vector_quantity("Boundary Normals", bdry_normal.detach().cpu().numpy(), enabled=True)
+                    # ps.get_point_cloud("Boundary Points").add_vector_quantity("Surfacce Boundary normals", bdry_normal_surf.detach().cpu().numpy(), enabled=False)
+                    # ps.show()
+
+                    grad_bdry = torch.autograd.grad(l_model(bdry_points).squeeze(), bdry_points, torch.ones_like(bdry_points[:, 0]), create_graph=True, retain_graph=True)[0]
+                    true_grad_bdry = torch.autograd.grad(u_bdry_true, bdry_points, torch.ones_like(bdry_points[:, 0]), create_graph=True, retain_graph=True, allow_unused=True)[0]
+
+                    flux_pred = torch.sum(grad_bdry * bdry_normal, dim=1)
+                    flux_true = torch.sum(true_grad_bdry * bdry_normal, dim=1)
+
+                    loss_bdry = torch.linalg.norm(flux_pred - flux_true, 2)**2
+                    loss = loss + 100*loss_bdry
+
+                    # --- enforce zero-mean solution on heightfield ---
+                    u_pred = l_model(v_mesh_torch).squeeze()
+                    mean_u = torch.mean(M @ u_pred) / torch.mean(M.sum())
+                    loss = loss + 100*mean_u**2
+
+                else:
+                    raise NotImplementedError("BC not implemented")
             
             loss.backward()
             if not torch.isnan(loss):
@@ -174,7 +212,7 @@ def train():
     size_layer = np.arange(30, 160, 20)
 
     V = sample_in_domain(100000)
-    true = f(V)
+    true = u_numpy(V)
 
     for i in n_layers:
         for j in size_layer:
@@ -215,7 +253,7 @@ def plot():
         model.load_state_dict(torch.load(file, weights_only=True, map_location=device))
 
         pred = model(torch.Tensor(V).to(device=device)).squeeze().detach().cpu().numpy()
-        true = f(V)
+        true = u_numpy(V)
 
         const = np.mean(true - pred)
         pred = pred + const
@@ -226,6 +264,19 @@ def plot():
 
         total_trainable_params = int(sum(p.numel() for p in model.parameters() if p.requires_grad))
         dof.append(total_trainable_params)
+
+        # Plot the error plots using polyscope
+        ps.init()
+        ps.set_screenshot_extension(".png")
+        ps.register_point_cloud("Surface Points", V)
+        ps.get_point_cloud("Surface Points").add_scalar_quantity("True Solution", true, enabled=True)
+        ps.screenshot(f"{save_dir}/example{sys.argv[1]}/true_{size_layer}_{n_layers}.png")
+
+        ps.get_point_cloud("Surface Points").add_scalar_quantity("Predicted Solution", pred, enabled=True)
+        ps.screenshot(f"{save_dir}/example{sys.argv[1]}/pred_{size_layer}_{n_layers}.png")
+
+        ps.get_point_cloud("Surface Points").add_scalar_quantity("Error", np.abs(true - pred), enabled=True)
+        ps.screenshot(f"{save_dir}/example{sys.argv[1]}/error_{size_layer}_{n_layers}.png")
 
     dof = np.array(dof)
     losses = np.array(losses)
@@ -274,6 +325,10 @@ if __name__ == "__main__":
 
     v_mesh, f_mesh = gpy.read_mesh(f"../data/{config['surface']}.obj")
 
+    # Get boundary edges
+    boundary_edges = gpy.boundary_edges(f_mesh)
+    boundary_edges = torch.tensor(boundary_edges, dtype=torch.long, device=device)
+
     # Discrete Laplace-Beltrami
     L = gpy.cotangent_laplacian(v_mesh, f_mesh)                # stiffness matrix
     L = scipy.sparse.csc_matrix(L)
@@ -281,19 +336,15 @@ if __name__ == "__main__":
     M = -scipy.sparse.csc_matrix(M)
 
     # Discrete Laplacian of f
-    lap_f_ = laplacian_f_np(v_mesh)
+    lap_u_ = rhs_np(v_mesh)
     
     # Enforce discrete compatibility: 1^T M f = 0
     area = M.sum()
-    mean_f = np.ones_like(lap_f_) @ (M @ lap_f_) / area
-    lap_f_ -= mean_f
+    mean_f = np.ones_like(lap_u_) @ (M @ lap_u_) / area
+    lap_u_ -= mean_f
 
     # Discrete surface Laplacian of u
-    u_mesh = spsolve(L, M @ lap_f_)   # equivalent to -M^{-1} L u
-
-    # Get boundary edges
-    boundary_edges = gpy.boundary_edges(f_mesh)
-    boundary_edges = torch.tensor(boundary_edges, dtype=torch.long, device=device)
+    u_mesh = spsolve(L, M @ lap_u_)   # equivalent to -M^{-1} L u
 
     v_mesh_torch = torch.tensor(v_mesh, dtype=torch.float32, device=device).requires_grad_(True)
     u_mesh_torch = torch.tensor(u_mesh, dtype=torch.float32, device=device).requires_grad_(True)

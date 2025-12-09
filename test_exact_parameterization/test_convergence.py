@@ -23,7 +23,7 @@ with open("config.json", "r") as f:
 usage_msg = "Usage: python test_parameterization.py [1|2|3|...]"
 
 # Define the target function f on the surface
-def f(v):
+def u_numpy(v):
     if config["surface"] == "heightfield":
         x, y = v[:, 0], v[:, 1]
         if sys.argv[1] == "1":
@@ -101,7 +101,7 @@ def f(v):
     return f.squeeze()
 
 # Define the target function f on the surface (PyTorch version)
-def f_torch(v):
+def u_torch(v):
     if config["surface"] == "heightfield":
         x, y = v[:, 0], v[:, 1]
         if sys.argv[1] == "1":
@@ -179,74 +179,74 @@ def f_torch(v):
     return f.squeeze()
 
 # Define the Laplacian of the target function f on the surface (PyTorch version)
-def laplacian_f(v):
+def rhs(v):
     if config["surface"] == "heightfield":
         x, y = v[:, 0], v[:, 1]
         if sys.argv[1] == "1":
-            lap_f = (0.5*x*(x*y*torch.sin(x)*torch.sin(y) + (y**2 + 1)*torch.cos(x)*torch.cos(y)) - 0.5*y*(x*y*torch.cos(x)*torch.cos(y) + (x**2 + 1)*torch.sin(x)*torch.sin(y)) + (x**2 + y**2 + 1)*(-1.0*x*y*torch.sin(y)*torch.cos(x) + 0.5*x*torch.cos(x)*torch.cos(y) - 0.5*y*torch.sin(x)*torch.sin(y) + (0.5*x**2 + 0.5)*torch.sin(x)*torch.cos(y) + (0.5*y**2 + 0.5)*torch.sin(x)*torch.cos(y)))/(x**2 + y**2 + 1)**2
+            lap_u = (0.5*x*(x*y*torch.sin(x)*torch.sin(y) + (y**2 + 1)*torch.cos(x)*torch.cos(y)) - 0.5*y*(x*y*torch.cos(x)*torch.cos(y) + (x**2 + 1)*torch.sin(x)*torch.sin(y)) + (x**2 + y**2 + 1)*(-1.0*x*y*torch.sin(y)*torch.cos(x) + 0.5*x*torch.cos(x)*torch.cos(y) - 0.5*y*torch.sin(x)*torch.sin(y) + (0.5*x**2 + 0.5)*torch.sin(x)*torch.cos(y) + (0.5*y**2 + 0.5)*torch.sin(x)*torch.cos(y)))/(x**2 + y**2 + 1)**2
         elif sys.argv[1] == "2":
-            lap_f = -np.pi*(x*(x*y*torch.sin(np.pi*x)*torch.sin(np.pi*y) + (y**2 + 1)*torch.cos(np.pi*x)*torch.cos(np.pi*y)) - y*(x*y*torch.cos(np.pi*x)*torch.cos(np.pi*y) + (x**2 + 1)*torch.sin(np.pi*x)*torch.sin(np.pi*y)) + (x**2 + y**2 + 1)*(-2*np.pi*x*y*torch.sin(np.pi*y)*torch.cos(np.pi*x) + x*torch.cos(np.pi*x)*torch.cos(np.pi*y) - y*torch.sin(np.pi*x)*torch.sin(np.pi*y) + np.pi*(x**2 + 1)*torch.sin(np.pi*x)*torch.cos(np.pi*y) + np.pi*(y**2 + 1)*torch.sin(np.pi*x)*torch.cos(np.pi*y)))/(x**2 + y**2 + 1)**2
+            lap_u = -np.pi*(x*(x*y*torch.sin(np.pi*x)*torch.sin(np.pi*y) + (y**2 + 1)*torch.cos(np.pi*x)*torch.cos(np.pi*y)) - y*(x*y*torch.cos(np.pi*x)*torch.cos(np.pi*y) + (x**2 + 1)*torch.sin(np.pi*x)*torch.sin(np.pi*y)) + (x**2 + y**2 + 1)*(-2*np.pi*x*y*torch.sin(np.pi*y)*torch.cos(np.pi*x) + x*torch.cos(np.pi*x)*torch.cos(np.pi*y) - y*torch.sin(np.pi*x)*torch.sin(np.pi*y) + np.pi*(x**2 + 1)*torch.sin(np.pi*x)*torch.cos(np.pi*y) + np.pi*(y**2 + 1)*torch.sin(np.pi*x)*torch.cos(np.pi*y)))/(x**2 + y**2 + 1)**2
         elif sys.argv[1] == "3":
-            lap_f = -np.pi*(x*(3*x*y*torch.sin(2*np.pi*x)*torch.sin(3*np.pi*y) + (2*y**2 + 2)*torch.cos(2*np.pi*x)*torch.cos(3*np.pi*y)) - y*(2*x*y*torch.cos(2*np.pi*x)*torch.cos(3*np.pi*y) + (3*x**2 + 3)*torch.sin(2*np.pi*x)*torch.sin(3*np.pi*y)) + (x**2 + y**2 + 1)*(-12*np.pi*x*y*torch.sin(3*np.pi*y)*torch.cos(2*np.pi*x) + 2*x*torch.cos(2*np.pi*x)*torch.cos(3*np.pi*y) - 3*y*torch.sin(2*np.pi*x)*torch.sin(3*np.pi*y) + 9*np.pi*(x**2 + 1)*torch.sin(2*np.pi*x)*torch.cos(3*np.pi*y) + 4*np.pi*(y**2 + 1)*torch.sin(2*np.pi*x)*torch.cos(3*np.pi*y)))/(x**2 + y**2 + 1)**2
+            lap_u = -np.pi*(x*(3*x*y*torch.sin(2*np.pi*x)*torch.sin(3*np.pi*y) + (2*y**2 + 2)*torch.cos(2*np.pi*x)*torch.cos(3*np.pi*y)) - y*(2*x*y*torch.cos(2*np.pi*x)*torch.cos(3*np.pi*y) + (3*x**2 + 3)*torch.sin(2*np.pi*x)*torch.sin(3*np.pi*y)) + (x**2 + y**2 + 1)*(-12*np.pi*x*y*torch.sin(3*np.pi*y)*torch.cos(2*np.pi*x) + 2*x*torch.cos(2*np.pi*x)*torch.cos(3*np.pi*y) - 3*y*torch.sin(2*np.pi*x)*torch.sin(3*np.pi*y) + 9*np.pi*(x**2 + 1)*torch.sin(2*np.pi*x)*torch.cos(3*np.pi*y) + 4*np.pi*(y**2 + 1)*torch.sin(2*np.pi*x)*torch.cos(3*np.pi*y)))/(x**2 + y**2 + 1)**2
         elif sys.argv[1] == "4":
-            lap_f = -10*np.pi*(x*(2*x*y*torch.sin(10*np.pi*x)*torch.sin(20*np.pi*y) + (y**2 + 1)*torch.cos(10*np.pi*x)*torch.cos(20*np.pi*y)) - y*(x*y*torch.cos(10*np.pi*x)*torch.cos(20*np.pi*y) + (2*x**2 + 2)*torch.sin(10*np.pi*x)*torch.sin(20*np.pi*y)) + (x**2 + y**2 + 1)*(-40*np.pi*x*y*torch.sin(20*np.pi*y)*torch.cos(10*np.pi*x) + x*torch.cos(10*np.pi*x)*torch.cos(20*np.pi*y) - 2*y*torch.sin(10*np.pi*x)*torch.sin(20*np.pi*y) + 40*np.pi*(x**2 + 1)*torch.sin(10*np.pi*x)*torch.cos(20*np.pi*y) + 10*np.pi*(y**2 + 1)*torch.sin(10*np.pi*x)*torch.cos(20*np.pi*y)))/(x**2 + y**2 + 1)**2
+            lap_u = -10*np.pi*(x*(2*x*y*torch.sin(10*np.pi*x)*torch.sin(20*np.pi*y) + (y**2 + 1)*torch.cos(10*np.pi*x)*torch.cos(20*np.pi*y)) - y*(x*y*torch.cos(10*np.pi*x)*torch.cos(20*np.pi*y) + (2*x**2 + 2)*torch.sin(10*np.pi*x)*torch.sin(20*np.pi*y)) + (x**2 + y**2 + 1)*(-40*np.pi*x*y*torch.sin(20*np.pi*y)*torch.cos(10*np.pi*x) + x*torch.cos(10*np.pi*x)*torch.cos(20*np.pi*y) - 2*y*torch.sin(10*np.pi*x)*torch.sin(20*np.pi*y) + 40*np.pi*(x**2 + 1)*torch.sin(10*np.pi*x)*torch.cos(20*np.pi*y) + 10*np.pi*(y**2 + 1)*torch.sin(10*np.pi*x)*torch.cos(20*np.pi*y)))/(x**2 + y**2 + 1)**2
         elif sys.argv[1] == "5":
-            lap_f = -10*np.pi*(x*(6*x*y*torch.sin(50*np.pi*x)*torch.sin(60*np.pi*y) + (5*y**2 + 5)*torch.cos(50*np.pi*x)*torch.cos(60*np.pi*y)) - y*(5*x*y*torch.cos(50*np.pi*x)*torch.cos(60*np.pi*y) + (6*x**2 + 6)*torch.sin(50*np.pi*x)*torch.sin(60*np.pi*y)) + (x**2 + y**2 + 1)*(-600*np.pi*x*y*torch.sin(60*np.pi*y)*torch.cos(50*np.pi*x) + 5*x*torch.cos(50*np.pi*x)*torch.cos(60*np.pi*y) - 6*y*torch.sin(50*np.pi*x)*torch.sin(60*np.pi*y) + 360*np.pi*(x**2 + 1)*torch.sin(50*np.pi*x)*torch.cos(60*np.pi*y) + 250*np.pi*(y**2 + 1)*torch.sin(50*np.pi*x)*torch.cos(60*np.pi*y)))/(x**2 + y**2 + 1)**2
+            lap_u = -10*np.pi*(x*(6*x*y*torch.sin(50*np.pi*x)*torch.sin(60*np.pi*y) + (5*y**2 + 5)*torch.cos(50*np.pi*x)*torch.cos(60*np.pi*y)) - y*(5*x*y*torch.cos(50*np.pi*x)*torch.cos(60*np.pi*y) + (6*x**2 + 6)*torch.sin(50*np.pi*x)*torch.sin(60*np.pi*y)) + (x**2 + y**2 + 1)*(-600*np.pi*x*y*torch.sin(60*np.pi*y)*torch.cos(50*np.pi*x) + 5*x*torch.cos(50*np.pi*x)*torch.cos(60*np.pi*y) - 6*y*torch.sin(50*np.pi*x)*torch.sin(60*np.pi*y) + 360*np.pi*(x**2 + 1)*torch.sin(50*np.pi*x)*torch.cos(60*np.pi*y) + 250*np.pi*(y**2 + 1)*torch.sin(50*np.pi*x)*torch.cos(60*np.pi*y)))/(x**2 + y**2 + 1)**2
         elif sys.argv[1] == "6":
-            lap_f = (-x*(33*x*y + 20*y**2 + 20) + y*(33*x**2 + 20*x*y + 33) - (20*x - 33*y)*(x**2 + y**2 + 1))/(x**2 + y**2 + 1)**2
+            lap_u = (-x*(33*x*y + 20*y**2 + 20) + y*(33*x**2 + 20*x*y + 33) - (20*x - 33*y)*(x**2 + y**2 + 1))/(x**2 + y**2 + 1)**2
         elif sys.argv[1] == "7":
-            lap_f = (-x*(76*x*y + 15*y**2 + 15) + y*(76*x**2 + 15*x*y + 76) - (15*x - 76*y)*(x**2 + y**2 + 1))/(x**2 + y**2 + 1)**2
+            lap_u = (-x*(76*x*y + 15*y**2 + 15) + y*(76*x**2 + 15*x*y + 76) - (15*x - 76*y)*(x**2 + y**2 + 1))/(x**2 + y**2 + 1)**2
         elif sys.argv[1] == "8":
-            lap_f = (-x*(234*x*y + 101*y**2 + 101) + y*(234*x**2 + 101*x*y + 234) - (101*x - 234*y)*(x**2 + y**2 + 1))/(x**2 + y**2 + 1)**2
+            lap_u = (-x*(234*x*y + 101*y**2 + 101) + y*(234*x**2 + 101*x*y + 234) - (101*x - 234*y)*(x**2 + y**2 + 1))/(x**2 + y**2 + 1)**2
         elif sys.argv[1] == "9":
-            lap_f = (x*(-230*x*y + 587*y**2 + 587) + y*(230*x**2 - 587*x*y + 230) + (587*x + 230*y)*(x**2 + y**2 + 1))/(x**2 + y**2 + 1)**2
+            lap_u = (x*(-230*x*y + 587*y**2 + 587) + y*(230*x**2 - 587*x*y + 230) + (587*x + 230*y)*(x**2 + y**2 + 1))/(x**2 + y**2 + 1)**2
         elif sys.argv[1] == "10":
-            lap_f = (-x*(4375*x*y + 4906*y**2 + 4906) + y*(4375*x**2 + 4906*x*y + 4375) - (4906*x - 4375*y)*(x**2 + y**2 + 1))/(x**2 + y**2 + 1)**2
+            lap_u = (-x*(4375*x*y + 4906*y**2 + 4906) + y*(4375*x**2 + 4906*x*y + 4375) - (4906*x - 4375*y)*(x**2 + y**2 + 1))/(x**2 + y**2 + 1)**2
         elif sys.argv[1] == "11":
-            lap_f = 3*(-x*(-2253*x*y + 2563*y**2 + 2563) - y*(2253*x**2 - 2563*x*y + 2253) - (2563*x + 2253*y)*(x**2 + y**2 + 1))/(x**2 + y**2 + 1)**2
+            lap_u = 3*(-x*(-2253*x*y + 2563*y**2 + 2563) - y*(2253*x**2 - 2563*x*y + 2253) - (2563*x + 2253*y)*(x**2 + y**2 + 1))/(x**2 + y**2 + 1)**2
         elif sys.argv[1] == "12":
-            lap_f = (x**2*(-69*x*(y**2 + 1) + 43*y) - y*(-69*x**3*y + 43*x**2 + 43) - (x**2 + y**2 + 1)*(69*x**3 - 138*x*(y**2 + 1) + 43*y))/(x**2 + y**2 + 1)**2
+            lap_u = (x**2*(-69*x*(y**2 + 1) + 43*y) - y*(-69*x**3*y + 43*x**2 + 43) - (x**2 + y**2 + 1)*(69*x**3 - 138*x*(y**2 + 1) + 43*y))/(x**2 + y**2 + 1)**2
         elif sys.argv[1] == "13":
-            lap_f = (-x**2*(69*x*(y**2 + 1) + 215*y**5) + y**2*(69*x**3 + 215*y**3*(x**2 + 1)) - (x**2 + y**2 + 1)*(69*x**3 - 138*x*(y**2 + 1) - 215*y**5 + 860*y**3*(x**2 + 1)))/(x**2 + y**2 + 1)**2
+            lap_u = (-x**2*(69*x*(y**2 + 1) + 215*y**5) + y**2*(69*x**3 + 215*y**3*(x**2 + 1)) - (x**2 + y**2 + 1)*(69*x**3 - 138*x*(y**2 + 1) - 215*y**5 + 860*y**3*(x**2 + 1)))/(x**2 + y**2 + 1)**2
         elif sys.argv[1] == "14":
-            lap_f = 3*(-x*(-324*x*y**3 + 35*y**2 + 35) + y**2*(35*x - 324*y*(x**2 + 1)) - (35*x + 324*y**3 - 648*y*(x**2 + 1))*(x**2 + y**2 + 1))/(x**2 + y**2 + 1)**2
+            lap_u = 3*(-x*(-324*x*y**3 + 35*y**2 + 35) + y**2*(35*x - 324*y*(x**2 + 1)) - (35*x + 324*y**3 - 648*y*(x**2 + 1))*(x**2 + y**2 + 1))/(x**2 + y**2 + 1)**2
         elif sys.argv[1] == "15":
-            lap_f = 9*(x**2*(425*x**3*(y**2 + 1) + 26*y**3) - y**2*(425*x**5 + 26*y*(x**2 + 1)) + (x**2 + y**2 + 1)*(425*x**5 - 1700*x**3*(y**2 + 1) - 26*y**3 + 52*y*(x**2 + 1)))/(x**2 + y**2 + 1)**2
+            lap_u = 9*(x**2*(425*x**3*(y**2 + 1) + 26*y**3) - y**2*(425*x**5 + 26*y*(x**2 + 1)) + (x**2 + y**2 + 1)*(425*x**5 - 1700*x**3*(y**2 + 1) - 26*y**3 + 52*y*(x**2 + 1)))/(x**2 + y**2 + 1)**2
         else:
             raise NotImplementedError()
         
     elif config["surface"] == "ellipsoid":
         x, y, z = v[:, 0], v[:, 1], v[:, 2]
         if sys.argv[1] == "1":
-            lap_f = 1296*(4*x - 9*y + 36*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
+            lap_u = 1296*(4*x - 9*y + 36*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
         elif sys.argv[1] == "2":
-            lap_f = 1296*(80*x - 297*y + 2628*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
+            lap_u = 1296*(80*x - 297*y + 2628*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
         elif sys.argv[1] == "3":
-            lap_f = 15552*(5*x - 57*y - 273*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
+            lap_u = 15552*(5*x - 57*y - 273*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
         elif sys.argv[1] == "4":
-            lap_f = 11664*(-4*x - 53*y - 112*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
+            lap_u = 11664*(-4*x - 53*y - 112*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
         elif sys.argv[1] == "5":
-            lap_f = 1296*(-304*x + 243*y + 2016*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
+            lap_u = 1296*(-304*x + 243*y + 2016*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
         elif sys.argv[1] == "6":
-            lap_f = 15552*(5*x - 57*y - 273*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
+            lap_u = 15552*(5*x - 57*y - 273*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
         elif sys.argv[1] == "7":
-            lap_f = 2592*(202*x - 1053*y - 8604*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
+            lap_u = 2592*(202*x - 1053*y - 8604*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
         elif sys.argv[1] == "8":
-            lap_f = 2592*(-1174*x - 1035*y - 17064*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
+            lap_u = 2592*(-1174*x - 1035*y - 17064*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
         elif sys.argv[1] == "9":
-            lap_f = 7776*(-596*x + 51*y - 2580*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
+            lap_u = 7776*(-596*x + 51*y - 2580*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
         elif sys.argv[1] == "10":
-            lap_f = 46656*(36*x - 25*y + 345*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
+            lap_u = 46656*(36*x - 25*y + 345*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
         elif sys.argv[1] == "11":
-            lap_f = 7776*(-2164*x + 561*y - 59136*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
+            lap_u = 7776*(-2164*x + 561*y - 59136*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
         elif sys.argv[1] == "12":
-            lap_f = 15552*(2899*x + 4470*y + 3705*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
+            lap_u = 15552*(2899*x + 4470*y + 3705*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
         elif sys.argv[1] == "13":
-            lap_f = 1296*(19624*x - 39375*y + 31320*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
+            lap_u = 1296*(19624*x - 39375*y + 31320*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
         elif sys.argv[1] == "14":
-            lap_f = 5184*(-23*x + 21285*y - 78777*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
+            lap_u = 5184*(-23*x + 21285*y - 78777*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
         elif sys.argv[1] == "15":
-            lap_f = 3888*(10252*x + 20277*y + 53184*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
+            lap_u = 3888*(10252*x + 20277*y + 53184*z)*(x**2 + y**2 + z**2 - 14)/(16*x**2 + 81*y**2 + 1296*z**2)**2
         else:
             raise NotImplementedError()
     
@@ -254,7 +254,7 @@ def laplacian_f(v):
         print(usage_msg)
         exit()
 
-    return lap_f.squeeze()
+    return lap_u.squeeze()
 
 # Sample n points uniformly on the surface
 def sample_in_domain(n):
@@ -383,21 +383,21 @@ def train_strong_form(l_model, device, n, size_layer, n_layers):
             normals = get_normals(v_cart, S_theta)
             laplacian_pred = get_surface_laplacian(l_model, v_cart, normals)
 
-            true_lap = laplacian_f(v_cart)
+            true_lap = rhs(v_cart)
 
             loss = torch.linalg.norm(laplacian_pred - true_lap, 2)**2
             
             ## DIRICHLET CONDITION ##
             if config["bc"] == "dirichlet" and config["surface"] != "ellipsoid":
                 bdry_points = get_bdry_points(n, device)
-                loss = loss + 100*(torch.linalg.norm(l_model(bdry_points).squeeze() - f_torch(bdry_points), 2)**2)  # Dirichlet boundary condition
+                loss = loss + 100*(torch.linalg.norm(l_model(bdry_points).squeeze() - u_torch(bdry_points), 2)**2)  # Dirichlet boundary condition
 
             ## NEUMANN CONDITION ##
             elif config["bc"] == "neumann" and config["surface"] != "ellipsoid":
                 bdry_points = get_bdry_points(n, device)
 
                 grad_bdry = torch.autograd.grad(l_model(bdry_points).squeeze(), bdry_points, torch.ones_like(bdry_points[:, 0]), create_graph=True, retain_graph=True)[0]
-                true_grad_bdry = torch.autograd.grad(f_torch(bdry_points).squeeze(), bdry_points, torch.ones_like(bdry_points[:, 0]), create_graph=True, retain_graph=True)[0]
+                true_grad_bdry = torch.autograd.grad(u_torch(bdry_points).squeeze(), bdry_points, torch.ones_like(bdry_points[:, 0]), create_graph=True, retain_graph=True)[0]
 
                 if config["surface"] == "heightfield":
                     n_surf = get_normals(bdry_points, S_theta)
@@ -462,7 +462,7 @@ def train():
     size_layer = np.arange(30, 160, 20)
 
     V = sample_in_domain(100000)
-    true = f(V)
+    true = u_numpy(V)
 
     for i in n_layers:
         for j in size_layer:
@@ -507,7 +507,7 @@ def plot():
         model.load_state_dict(torch.load(file, weights_only=True, map_location=device))
 
         pred = model(torch.Tensor(V).to(device=device)).squeeze().detach().cpu().numpy()
-        true = f(V)
+        true = u_numpy(V)
 
         if config["bc"] != "dirichlet":
             const = np.mean(true - pred)
@@ -540,10 +540,10 @@ def plot():
         print(iter)
         if config["surface"] == "heightfield":
             v_mesh, f_mesh = gpy.read_mesh(f"../data/heightfield_{iter}.obj")
-            f_ = laplacian_f(torch.Tensor(v_mesh).to(device=device)).detach().cpu().numpy()
+            f_ = rhs(torch.Tensor(v_mesh).to(device=device)).detach().cpu().numpy()
         elif config["surface"] == "ellipsoid":
             v_mesh, f_mesh = gpy.read_mesh(f"../data/ellipsoid_{iter}.obj")
-            f_ = laplacian_f(torch.Tensor(v_mesh).to(device=device)).detach().cpu().numpy()
+            f_ = rhs(torch.Tensor(v_mesh).to(device=device)).detach().cpu().numpy()
 
         M_mesh = gpy.massmatrix(v_mesh, f_mesh)
         M_mesh = sp.sparse.csc_matrix(M_mesh)
@@ -559,15 +559,15 @@ def plot():
             for i in BV:
                 lap_mesh[i, :] = 0
                 lap_mesh[i, i] = 1
-            f_[BV] = f(v_mesh[BV])
+            f_[BV] = u_numpy(v_mesh[BV])
 
-        u = sp.sparse.linalg.spsolve(lap_mesh, f_)
+        u_fem = sp.sparse.linalg.spsolve(lap_mesh, f_)
 
         if config["surface"] == "ellipsoid":
-            const = np.mean(f(v_mesh) - u)
-            u = u + const
+            const = np.mean(u_numpy(v_mesh) - u_fem)
+            u_fem = u_fem + const
         
-        l2_loss = np.linalg.norm(f(v_mesh) - u, 2) / np.linalg.norm(f(v_mesh), 2)
+        l2_loss = np.linalg.norm(u_numpy(v_mesh) - u_fem, 2) / np.linalg.norm(u_numpy(v_mesh), 2)
         print("FEM Loss:", l2_loss)
         fem_loss.append(l2_loss)
         fem_dof.append(v_mesh.shape[0])
