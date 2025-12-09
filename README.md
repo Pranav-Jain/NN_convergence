@@ -12,7 +12,7 @@ Our experiments can be summarised in the following table:
 | 2. | Using exact normals | [14/15](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/poisson_results/heightfield/noNN/dirichlet/domain_-1.0to1.0/convergence_summary.json) | [11/12](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/poisson_results/heightfield/noNN/neumann/domain_-1.0to1.0/convergence_summary.json) | [9/12](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/poisson_results/ellipsoid/noNN/dirichlet/domain_-1.0to1.0/convergence_summary.json) |
 | 3. | MLP learns exact normals  | [11/12](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/poisson_results/heightfield/withNN/dirichlet/domain_-1.0to1.0/convergence_summary.json) | [6/12](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/poisson_results/heightfield/withNN/neumann/domain_-1.0to1.0/convergence_summary.json) | [8/12](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/poisson_results/ellipsoid/withNN/dirichlet/domain_-1.0to1.0/convergence_summary.json) |
 | 4. | MLP learns mesh normals | [9/12](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/poisson_results/heightfield/withNN_mesh/dirichlet/domain_-1.0to1.0/convergence_summary.json) | [4/12](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/poisson_results/heightfield/withNN_mesh/neumann/domain_-1.0to1.0/convergence_summary.json) | [9/12](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/poisson_results/ellipsoid/withNN_mesh/dirichlet/domain_-1.0to1.0/convergence_summary.json) |
-| 5. | MLP learns normals<br> on arbitrary mesh | - | - | - |
+| 5. | MLP learns normals<br> on arbitrary mesh | [3/4](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_computed_parameterization/poisson_results/hand/dirichlet/domain_-1.0to1.0/convergence_summary.json) | - | [4/4](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_computed_parameterization/poisson_results/spot/dirichlet/domain_-1.0to1.0/convergence_summary.json), [4/4](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_computed_parameterization/poisson_results/bunny/dirichlet/domain_-1.0to1.0/convergence_summary.json) |
 
 1. The first experiment is to solve the Poisson equation directly on a plane with Dirichlet and Neumann boundary and on the surface of the sphere
 2. The second experiment is to solve on the heightfield (2d plane as parameter domain) and ellipsoid (sphere as parameter domain) with exact normals
@@ -146,6 +146,12 @@ Use the following command to run the script
 python3 [train_hf_normal.py|train_ellipsoid_normal.py] [exact|mesh]
 ```
 The argument is to know whether to learn the exact normals (experiment 3) or the mesh normals (experiment 4).
+
+To train mesh normals on arbitrary mesh, use the script [train_NN_mesh_normals.py](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_computed_parameterization/train_NN_mesh_normals.py). Use the following command to run the script
+```sh
+python3 train_NN_mesh_normals.py <meshname>
+```
+where <meshname>.obj is the mesh file present in the [data](https://github.com/Pranav-Jain/NN_convergence/tree/main/data) directory.
 
 ## Pretrained models
 We test using multiple analytical functions for all experiments. The pretrained models are stored in __poisson_results__ for each experiment. The models are trained using the `operation="train"` in the config file.
