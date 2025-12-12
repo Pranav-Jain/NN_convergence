@@ -41,10 +41,28 @@
             "slope": -1.1729175551313291,
             "correlation": -0.8732576281885553,
             "converged": 1
+        },
+        {
+            "example": "example8",
+            "slope": -0.7525240101557694,
+            "correlation": -0.9853289859267392,
+            "converged": 1
+        },
+        {
+            "example": "example9",
+            "slope": -0.7506734627377857,
+            "correlation": -0.9140515780016141,
+            "converged": 1
+        },
+        {
+            "example": "example10",
+            "slope": -2.2041240739071517e-06,
+            "correlation": -0.5534186181272581,
+            "converged": 0
         }
     ],
-    "num_converged": 6,
-    "total_examples": 7,
-    "fraction_converged": 0.8571428571428571,
+    "num_converged": 8,
+    "total_examples": 10,
+    "fraction_converged": 0.8,
     "overall_converged": 1
 }
