@@ -40,7 +40,17 @@ def rhs(v):
     elif sys.argv[1] == "4":
         lap_u = torch.sin(np.pi*x)**2*torch.sin(np.pi*y)*torch.sin(np.pi*z)**3
     elif sys.argv[1] == "5":
-        lap_u = torch.cos(np.pi*x)**2*torch.sin(np.pi*y)**0.5*torch.cos(np.pi*z)
+        lap_u = x - y + z
+    elif sys.argv[1] == "6":
+        lap_u = 4*x + 2*y - 3*z
+    elif sys.argv[1] == "7":
+        lap_u = -1*x + 2*y**2 - z**3
+    elif sys.argv[1] == "8":
+        lap_u = 100*x + 234*y - 457*z
+    elif sys.argv[1] == "9":
+        lap_u = 100*x**2 + 234*y**3 + 457*z**4
+    elif sys.argv[1] == "10":
+        lap_u = -100*x**8 + 234*y**(-2) + 457*z**9
         
     else:
         raise NotImplementedError()
@@ -59,7 +69,17 @@ def rhs_np(v):
     elif sys.argv[1] == "4":
         lap_u = np.sin(np.pi*x)**2*np.sin(np.pi*y)*np.sin(np.pi*z)**3
     elif sys.argv[1] == "5":
-        lap_u = np.sin(np.pi*x)**5*np.sin(np.pi*y)**(-2)*np.sin(np.pi*z)
+        lap_u = x - y + z
+    elif sys.argv[1] == "6":
+        lap_u = 4*x + 2*y - 3*z
+    elif sys.argv[1] == "7":
+        lap_u = -1*x + 2*y**2 - z**3
+    elif sys.argv[1] == "8":
+        lap_u = 100*x + 234*y - 457*z
+    elif sys.argv[1] == "9":
+        lap_u = 100*x**2 + 234*y**3 + 457*z**4
+    elif sys.argv[1] == "10":
+        lap_u = -100*x**8 + 234*y**(-2) + 457*z**9
         
     else:
         raise NotImplementedError()
@@ -278,8 +298,50 @@ def plot():
         ps.get_point_cloud("Surface Points").add_scalar_quantity("Error", np.abs(true - pred), enabled=True)
         ps.screenshot(f"{save_dir}/example{sys.argv[1]}/error_{size_layer}_{n_layers}.png")
 
+    fem_loss = []
+    fem_dof = []
+    for iter in range(4):
+        v_mesh_fem, f_mesh_fem = gpy.read_mesh(f"../data/{config['surface']}_{iter}.obj")
+        print(f"FEM Mesh {iter}: {v_mesh_fem.shape[0]} vertices, {f_mesh_fem.shape[0]} faces")
+        lap_u_fem = rhs(torch.Tensor(v_mesh_fem).to(device=device)).detach().cpu().numpy()
+        lap_u_fem -= mean_f
+
+        M_fem = gpy.massmatrix(v_mesh_fem, f_mesh_fem)
+        M_fem = -sp.sparse.csc_matrix(M_fem)
+
+        BV_fem = gpy.boundary_vertices(f_mesh_fem)
+        
+        L_fem = gpy.cotangent_laplacian(v_mesh_fem, f_mesh_fem)
+
+        # Apply Dirichlet Boundary
+        # Section 4.3 - https://web.stanford.edu/class/energy281/FiniteElementMethod.pdf
+        if config["surface"] == "heightfield":
+            for i in BV_fem:
+                L_fem[i, :] = 0
+                L_fem[i, i] = 1
+            lap_u_fem[BV_fem] = u_numpy(v_mesh_fem[BV_fem])
+
+        u_fem = spsolve(L_fem, M_fem @ lap_u_fem)
+
+        const = np.mean(u_numpy(v_mesh_fem) - u_fem)
+        u_fem = u_fem + const
+        
+        l2_loss = np.linalg.norm(u_numpy(v_mesh_fem) - u_fem, 2) / np.linalg.norm(u_numpy(v_mesh_fem), 2)
+        print("FEM Loss:", l2_loss)
+        fem_loss.append(l2_loss)
+        fem_dof.append(v_mesh_fem.shape[0])
+
+        # ps.init()
+        # ps.register_surface_mesh(f"FEM Surface {iter}", v_mesh_fem, f_mesh_fem)
+        # ps.get_surface_mesh(f"FEM Surface {iter}").add_scalar_quantity("FEM Solution", u_fem, enabled=True)
+        # ps.get_surface_mesh(f"FEM Surface {iter}").add_scalar_quantity("True Solution", u_numpy(v_mesh_fem), enabled=False)
+        # ps.get_surface_mesh(f"FEM Surface {iter}").add_scalar_quantity("Error", np.abs(u_numpy(v_mesh_fem) - u_fem), enabled=False)
+        # ps.show()
+
     dof = np.array(dof)
     losses = np.array(losses)
+    fem_dof = np.array(fem_dof)
+    fem_loss = np.array(fem_loss)
 
     dof_sorted = np.sort(dof)
     losses_sorted = losses[np.argsort(dof)]
@@ -306,6 +368,7 @@ def plot():
     coeffs = np.polyfit(np.log(x), np.log(y), 1)
 
     plt.loglog(x, y, label="PINN", marker='o')
+    plt.loglog(fem_dof, fem_loss, label="FEM", marker='o')
     plt.loglog(x, 1/x, label="1/x", color="red", linestyle='--')
     plt.loglog(x, (1/x)**2, label="1/x^2", color="green", linestyle='--')
 
@@ -342,6 +405,15 @@ if __name__ == "__main__":
     area = M.sum()
     mean_f = np.ones_like(lap_u_) @ (M @ lap_u_) / area
     lap_u_ -= mean_f
+
+    # Apply Dirichlet Boundary
+    # Section 4.3 - https://web.stanford.edu/class/energy281/FiniteElementMethod.pdf
+    BV = gpy.boundary_vertices(f_mesh)
+    if config["surface"] == "heightfield":
+        for i in BV:
+            L[i, :] = 0
+            L[i, i] = 1
+        lap_u_[BV] = u_numpy(v_mesh[BV])
 
     # Discrete surface Laplacian of u
     u_mesh = spsolve(L, M @ lap_u_)   # equivalent to -M^{-1} L u
