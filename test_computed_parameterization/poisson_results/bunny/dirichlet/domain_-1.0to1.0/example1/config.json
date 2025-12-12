@@ -13,6 +13,6 @@
         "grad_clip": 10.0,
         "scheduler_patience": 1000,
         "num_samples": 10000,
-        "max_iter": 70000
+        "max_iter": 150000
     }
 }

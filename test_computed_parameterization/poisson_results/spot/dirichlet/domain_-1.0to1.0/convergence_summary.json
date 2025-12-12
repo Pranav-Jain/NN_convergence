@@ -2,26 +2,26 @@
     "individual_results": [
         {
             "example": "example1",
-            "slope": -0.9238712332448225,
-            "correlation": -0.919439728722037,
+            "slope": -0.5421498238417354,
+            "correlation": -0.9074159376060363,
             "converged": 1
         },
         {
             "example": "example2",
-            "slope": -1.0564816420935434,
-            "correlation": -0.964131243098667,
+            "slope": -0.903154183156236,
+            "correlation": -0.7805972421454552,
             "converged": 1
         },
         {
             "example": "example3",
-            "slope": -0.7175420570162108,
-            "correlation": -0.9406161935779013,
+            "slope": -0.79500855927363,
+            "correlation": -0.993744499237854,
             "converged": 1
         },
         {
             "example": "example4",
-            "slope": -1.0033293195378497,
-            "correlation": -0.910865897777916,
+            "slope": -0.7592175084965737,
+            "correlation": -0.9864768999099731,
             "converged": 1
         }
     ],
