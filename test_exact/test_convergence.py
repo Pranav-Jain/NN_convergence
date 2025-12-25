@@ -24,38 +24,63 @@ def relative_l2_loss(pred, true):
 
 # Define the functions
 def u_torch(v):
-    if config["dimension"] == 2: # 2D case (on a square)
+    if config["dimension"] == 2 and config["bc"] == "dirichlet": # 2D case (on a square)
         x, y = v[:, 0], v[:, 1]
+        a = config["domain"]["min"]
+        b = config["domain"]["max"]
+        X = (x - a)/(b - a)
+        Y = (y - a)/(b - a)
+
         if sys.argv[1] == "1":
-            f = torch.sin(x)*torch.cos(y) / (-2)
+            f = X*(1-X)*Y*(1-Y)*(X**2)
         elif sys.argv[1] == "2":
-            f = torch.sin(np.pi*x)*torch.cos(np.pi*y) / (-2*np.pi**2)
+            f = X*(1-X)*Y*(1-Y)*(X**2*Y**4)
         elif sys.argv[1] == "3":
-            f = torch.sin(2*x)*torch.cos(3*y) / (-13)
+            f = X*(1-X)*Y*(1-Y)*(X**3 - Y**3)
         elif sys.argv[1] == "4":
-            f = torch.sin(10*x)*torch.cos(20*y) / (-500)
+            f = (X*(1-X)*Y*(1-Y))**2
         elif sys.argv[1] == "5":
-            f = torch.sin(10*np.pi*x)*torch.cos(20*np.pi*y) / (-500*np.pi**2)
+            f = (X*(1-X)*Y*(1-Y))**5
         elif sys.argv[1] == "6":
-            f = (23*x**3 + 43*y) / 3090.0
-        elif sys.argv[1] == "7":
-            f = (23*x**3 - 43*y**5) / 137250.0
-        elif sys.argv[1] == "8":
-            f = (105*x**2 + 324*y**3) / 43125.0
-        elif sys.argv[1] == "9":
-            f = (-765*x**5 + 78*y**3) / 2400375.0
-        elif sys.argv[1] == "10":
-            f = (-685*x**8 - 546*y**9) / 1333984375.0
-        elif sys.argv[1] == "11":
             f = torch.sin(np.pi*x)*torch.sin(np.pi*y) / (-2*np.pi**2)
-        elif sys.argv[1] == "12":
+        elif sys.argv[1] == "7":
             f = torch.sin(2*np.pi*x)*torch.sin(np.pi*y) / (-5*np.pi**2)
-        elif sys.argv[1] == "13":
+        elif sys.argv[1] == "8":
             f = torch.sin(2*np.pi*x)*torch.sin(3*np.pi*y) / (-13*np.pi**2)
-        elif sys.argv[1] == "14":
+        elif sys.argv[1] == "9":
             f = torch.sin(5*np.pi*x)*torch.sin(5*np.pi*y) / (-50*np.pi**2)
-        elif sys.argv[1] == "15":
+        elif sys.argv[1] == "10":
             f = torch.sin(8*np.pi*x)*torch.sin(10*np.pi*y) / (-164*np.pi**2)
+        else:
+            raise NotImplementedError()
+
+    elif config["dimension"] == 2 and config["bc"] == "neumann": # 2D case (on a square)
+        x, y = v[:, 0], v[:, 1]
+        a = config["domain"]["min"]
+        b = config["domain"]["max"]
+        X = (x - a)/(b - a)
+        Y = (y - a)/(b - a)
+
+        if sys.argv[1] == "1":
+            f = (X*(1-X))**2 + (Y*(1-Y))**2
+        elif sys.argv[1] == "2":
+            f = (X*(1-X))**4 + (Y*(1-Y))**6
+        elif sys.argv[1] == "3":
+            f = (105*x**2 + 324*y**3) / 43125.0
+        elif sys.argv[1] == "4":
+            f = (-765*x**5 + 78*y**3) / 2400375.0
+        elif sys.argv[1] == "5":
+            f = (-685*x**8 - 546*y**9) / 1333984375.0
+        elif sys.argv[1] == "6":
+            f = torch.cos(np.pi*x)*torch.cos(np.pi*y) / (-2*np.pi**2)
+        elif sys.argv[1] == "7":
+            f = torch.cos(2*np.pi*x)*torch.cos(np.pi*y) / (-5*np.pi**2)
+        elif sys.argv[1] == "8":
+            f = torch.cos(2*np.pi*x)*torch.cos(3*np.pi*y) / (-13*np.pi**2)
+        elif sys.argv[1] == "9":
+            f = torch.cos(5*np.pi*x)*torch.cos(5*np.pi*y) / (-50*np.pi**2)
+        elif sys.argv[1] == "10":
+            f = torch.cos(8*np.pi*x)*torch.cos(10*np.pi*y) / (-164*np.pi**2)
         else:
             raise NotImplementedError()
         
@@ -77,38 +102,63 @@ def u_torch(v):
 
 # Laplacian of f
 def rhs(v):
-    if config["dimension"] == 2:
+    if config["dimension"] == 2 and config["bc"] == "dirichlet":
         x, y = v[:, 0], v[:, 1]
+        a = config["domain"]["min"]
+        b = config["domain"]["max"]
+        X = (x - a)/(b - a)
+        Y = (y - a)/(b - a)
+
         if sys.argv[1] == "1":
-            lap_u = torch.cos(y)*torch.sin(x)
+            lap_u = 2*X*(X**2*(X - 1) + 3*Y*(2*X - 1)*(Y - 1))
         elif sys.argv[1] == "2":
-            lap_u = torch.cos(np.pi*y)*torch.sin(np.pi*x)
+            lap_u = 2*X*Y**3*(5*X**2*(X - 1)*(3*Y - 2) + 3*Y**2*(2*X - 1)*(Y - 1))
         elif sys.argv[1] == "3":
-            lap_u = torch.cos(3*y)*torch.sin(2*x)
+            lap_u = -2*X*(X - 1)*(-X**3 + 4*Y**3 + 6*Y**2*(Y - 1)) + 2*Y*(Y - 1)*(4*X**3 + 6*X**2*(X - 1) - Y**3)
         elif sys.argv[1] == "4":
-            lap_u = torch.cos(20*y)*torch.sin(10*x)
+            lap_u = 2*X**2*(X - 1)**2*(Y**2 + 4*Y*(Y - 1) + (Y - 1)**2) + 2*Y**2*(Y - 1)**2*(X**2 + 4*X*(X - 1) + (X - 1)**2)
         elif sys.argv[1] == "5":
-            lap_u = torch.cos(20*np.pi*y)*torch.sin(10*np.pi*x)
+            lap_u = 10*X**3*Y**3*(X - 1)**3*(Y - 1)**3*(X**2*(X - 1)**2*(2*Y**2 + 5*Y*(Y - 1) + 2*(Y - 1)**2) + Y**2*(Y - 1)**2*(2*X**2 + 5*X*(X - 1) + 2*(X - 1)**2))
         elif sys.argv[1] == "6":
-            lap_u = (138*x) / 3090.0
-        elif sys.argv[1] == "7":
-            lap_u = ((138*x)-(860*y**3)) / 137250.0
-        elif sys.argv[1] == "8":
-            lap_u = (6*(35+324*y)) / 43125.0
-        elif sys.argv[1] == "9":
-            lap_u = ((-15300*x**3)+468*y) / 2400375.0
-        elif sys.argv[1] == "10":
-            lap_u = (-56*((685*x**6)+(702*y**7))) / 1333984375.0
-        elif sys.argv[1] == "11":
             lap_u = torch.sin(np.pi*x)*torch.sin(np.pi*y)
-        elif sys.argv[1] == "12":
+        elif sys.argv[1] == "7":
             lap_u = torch.sin(2*np.pi*x)*torch.sin(np.pi*y)
-        elif sys.argv[1] == "13":
+        elif sys.argv[1] == "8":
             lap_u = torch.sin(2*np.pi*x)*torch.sin(3*np.pi*y)
-        elif sys.argv[1] == "14":
+        elif sys.argv[1] == "9":
             lap_u = torch.sin(5*np.pi*x)*torch.sin(5*np.pi*y)
-        elif sys.argv[1] == "15":
+        elif sys.argv[1] == "10":
             lap_u = torch.sin(8*np.pi*x)*torch.sin(10*np.pi*y)
+        else:
+            raise NotImplementedError()
+        
+    elif config["dimension"] == 2 and config["bc"] == "neumann":
+        x, y = v[:, 0], v[:, 1]
+        a = config["domain"]["min"]
+        b = config["domain"]["max"]
+        X = (x - a)/(b - a)
+        Y = (y - a)/(b - a)
+
+        if sys.argv[1] == "1":
+            lap_u = (138*x) / 3090.0
+        elif sys.argv[1] == "2":
+            lap_u = ((138*x)-(860*y**3)) / 137250.0
+        elif sys.argv[1] == "3":
+            lap_u = (6*(35+324*y)) / 43125.0
+        elif sys.argv[1] == "4":
+            lap_u = ((-15300*x**3)+468*y) / 2400375.0
+        elif sys.argv[1] == "5":
+            lap_u = (-56*((685*x**6)+(702*y**7))) / 1333984375.0
+        elif sys.argv[1] == "6":
+            lap_u = torch.cos(np.pi*x)*torch.cos(np.pi*y)
+        elif sys.argv[1] == "7":
+            lap_u = torch.cos(2*np.pi*x)*torch.cos(np.pi*y)
+        elif sys.argv[1] == "8":
+            lap_u = torch.cos(2*np.pi*x)*torch.cos(3*np.pi*y)
+        elif sys.argv[1] == "9":
+            lap_u = torch.cos(5*np.pi*x)*torch.cos(5*np.pi*y)
+        elif sys.argv[1] == "10":
+            lap_u = torch.cos(8*np.pi*x)*torch.cos(10*np.pi*y)
         else:
             raise NotImplementedError()
     
@@ -130,38 +180,63 @@ def rhs(v):
 
 # Numpy version of f for FEM
 def u_numpy(v):
-    if config["dimension"] == 2:
+    if config["dimension"] == 2 and config["bc"] == "dirichlet": # 2D case (on a square)
         x, y = v[:, 0], v[:, 1]
+        a = config["domain"]["min"]
+        b = config["domain"]["max"]
+        X = (x - a)/(b - a)
+        Y = (y - a)/(b - a)
+
         if sys.argv[1] == "1":
-            f = np.sin(x)*np.cos(y) / (-2)
+            f = X*(1-X)*Y*(1-Y)*(X**2)
         elif sys.argv[1] == "2":
-            f = np.sin(np.pi*x)*np.cos(np.pi*y) / (-2*np.pi**2)
+            f = X*(1-X)*Y*(1-Y)*(X**2*Y**4)
         elif sys.argv[1] == "3":
-            f = np.sin(2*x)*np.cos(3*y) / (-13)
+            f = X*(1-X)*Y*(1-Y)*(X**3 - Y**3)
         elif sys.argv[1] == "4":
-            f = np.sin(10*x)*np.cos(20*y) / (-500)
+            f = (X*(1-X)*Y*(1-Y))**2
         elif sys.argv[1] == "5":
-            f = np.sin(10*np.pi*x)*np.cos(20*np.pi*y) / (-500*np.pi**2) 
+            f = (X*(1-X)*Y*(1-Y))**5
         elif sys.argv[1] == "6":
-            f = (23*x**3 + 43*y) / 3090.0
-        elif sys.argv[1] == "7":
-            f = (23*x**3 - 43*y**5) / 137250.0
-        elif sys.argv[1] == "8":
-            f = (105*x**2 + 324*y**3) / 43125.0
-        elif sys.argv[1] == "9":
-            f = (-765*x**5 + 78*y**3) / 2400375.0
-        elif sys.argv[1] == "10":
-            f = (-685*x**8 - 546*y**9) / 1333984375.0
-        elif sys.argv[1] == "11":
             f = np.sin(np.pi*x)*np.sin(np.pi*y) / (-2*np.pi**2)
-        elif sys.argv[1] == "12":
+        elif sys.argv[1] == "7":
             f = np.sin(2*np.pi*x)*np.sin(np.pi*y) / (-5*np.pi**2)
-        elif sys.argv[1] == "13":
+        elif sys.argv[1] == "8":
             f = np.sin(2*np.pi*x)*np.sin(3*np.pi*y) / (-13*np.pi**2)
-        elif sys.argv[1] == "14":
+        elif sys.argv[1] == "9":
             f = np.sin(5*np.pi*x)*np.sin(5*np.pi*y) / (-50*np.pi**2)
-        elif sys.argv[1] == "15":
+        elif sys.argv[1] == "10":
             f = np.sin(8*np.pi*x)*np.sin(10*np.pi*y) / (-164*np.pi**2)
+        else:
+            raise NotImplementedError()
+        
+    elif config["dimension"] == 2 and config["bc"] == "neumann": # 2D case (on a square)
+        x, y = v[:, 0], v[:, 1]
+        a = config["domain"]["min"]
+        b = config["domain"]["max"]
+        X = (x - a)/(b - a)
+        Y = (y - a)/(b - a)
+
+        if sys.argv[1] == "1":
+            f = X*(1-X)*Y*(1-Y)*(X**2)
+        elif sys.argv[1] == "2":
+            f = X*(1-X)*Y*(1-Y)*(X**2*Y**4)
+        elif sys.argv[1] == "3":
+            f = X*(1-X)*Y*(1-Y)*(X**3 - Y**3)
+        elif sys.argv[1] == "4":
+            f = (X*(1-X)*Y*(1-Y))**2
+        elif sys.argv[1] == "5":
+            f = (X*(1-X)*Y*(1-Y))**5
+        elif sys.argv[1] == "6":
+            f = np.cos(np.pi*x)*np.cos(np.pi*y) / (-2*np.pi**2)
+        elif sys.argv[1] == "7":
+            f = np.cos(2*np.pi*x)*np.cos(np.pi*y) / (-5*np.pi**2)
+        elif sys.argv[1] == "8":
+            f = np.cos(2*np.pi*x)*np.cos(3*np.pi*y) / (-13*np.pi**2)
+        elif sys.argv[1] == "9":
+            f = np.cos(5*np.pi*x)*np.cos(5*np.pi*y) / (-50*np.pi**2)
+        elif sys.argv[1] == "10":
+            f = np.cos(8*np.pi*x)*np.cos(10*np.pi*y) / (-164*np.pi**2)
         else:
             raise NotImplementedError()
     
@@ -180,6 +255,37 @@ def u_numpy(v):
             raise NotImplementedError()
 
     return f.squeeze()
+
+def phi(x, eps=0.01):
+    """
+    C² smooth cutoff function for square domain [a,b]^2
+    Exact 1 in the interior, smoothly goes to 0 in epsilon boundary layer
+    """
+    a = config["domain"]["min"]
+    b = config["domain"]["max"]
+
+    # Distance to boundary
+    d = torch.stack([
+        x[:, 0] - a,
+        b - x[:, 0],
+        x[:, 1] - a,
+        b - x[:, 1]
+    ], dim=1)
+    
+    d_min = torch.min(d, dim=1).values
+
+    phi = torch.ones_like(d_min)
+
+    # Apply cubic ramp only in boundary layer
+    mask = (d_min > 0) & (d_min <= eps)
+    t = d_min[mask] / eps
+    # phi[mask] = 2*t**3 - 3*t**2 + 1
+    phi[mask] = t
+
+    # Exact zero on boundary
+    phi[d_min <= 0] = 0.0
+
+    return phi
 
 def test_FEM(nx, ny, return_memory=False):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -323,14 +429,15 @@ def train_strong_form(dim, max_iter, size_layer, n_layers): # for square domain
         x = torch.tensor(np.random.uniform(config["domain"]["min"], config["domain"]["max"], (config["architecture"]["num_samples"], 2))).to(device=device).requires_grad_(True).float()
         
         # Boundary points
-        b = torch.tensor(np.random.uniform(config["domain"]["min"], config["domain"]["max"], (config["architecture"]["num_samples"]))).to(device=device).requires_grad_(True).float()
+        b = torch.tensor(np.random.uniform(config["domain"]["min"], config["domain"]["max"], (config["architecture"]["num_samples"]//4))).to(device=device).requires_grad_(True).float()
         b1 = torch.stack([b, torch.ones_like(b)*config["domain"]["max"]], dim=1)
         b2 = torch.stack([b, torch.ones_like(b)*config["domain"]["min"]], dim=1)
         b3 = torch.stack([torch.ones_like(b)*config["domain"]["max"], b], dim=1)
         b4 = torch.stack([torch.ones_like(b)*config["domain"]["min"], b], dim=1)
+        x = torch.cat((x, b1, b2, b3, b4), dim=0)
 
         true = rhs(x)
-        pred = u_torch(x).squeeze()
+        pred = model(x).squeeze()
 
         grad_pred = torch.autograd.grad(pred, x, torch.ones_like(pred), create_graph=True)[0]
         
@@ -366,41 +473,41 @@ def train_strong_form(dim, max_iter, size_layer, n_layers): # for square domain
             temp += (torch.linalg.norm(pred_b4 - u_torch(b4), 2)**2)/b4.shape[0]
             loss += 100*temp
         
-        elif config["bc"] == "neumann":
-            grad_pred_b1 = torch.autograd.grad(pred_b1, b1, torch.ones_like(pred_b1), create_graph=True)[0]
-            grad_pred_b2 = torch.autograd.grad(pred_b2, b2, torch.ones_like(pred_b2), create_graph=True)[0]
-            grad_pred_b3 = torch.autograd.grad(pred_b3, b3, torch.ones_like(pred_b3), create_graph=True)[0]
-            grad_pred_b4 = torch.autograd.grad(pred_b4, b4, torch.ones_like(pred_b4), create_graph=True)[0]
+        # elif config["bc"] == "neumann":
+        #     grad_pred_b1 = torch.autograd.grad(pred_b1, b1, torch.ones_like(pred_b1), create_graph=True)[0]
+        #     grad_pred_b2 = torch.autograd.grad(pred_b2, b2, torch.ones_like(pred_b2), create_graph=True)[0]
+        #     grad_pred_b3 = torch.autograd.grad(pred_b3, b3, torch.ones_like(pred_b3), create_graph=True)[0]
+        #     grad_pred_b4 = torch.autograd.grad(pred_b4, b4, torch.ones_like(pred_b4), create_graph=True)[0]
             
-            true_b1 = u_torch(b1)
-            true_b2 = u_torch(b2)
-            true_b3 = u_torch(b3)
-            true_b4 = u_torch(b4)
-            grad_true_b1 = torch.autograd.grad(true_b1, b1, torch.ones_like(true_b1), create_graph=True)[0]
-            grad_true_b2 = torch.autograd.grad(true_b2, b2, torch.ones_like(true_b2), create_graph=True)[0]
-            grad_true_b3 = torch.autograd.grad(true_b3, b3, torch.ones_like(true_b3), create_graph=True)[0]
-            grad_true_b4 = torch.autograd.grad(true_b4, b4, torch.ones_like(true_b4), create_graph=True)[0]
+        #     true_b1 = u_torch(b1)
+        #     true_b2 = u_torch(b2)
+        #     true_b3 = u_torch(b3)
+        #     true_b4 = u_torch(b4)
+        #     grad_true_b1 = torch.autograd.grad(true_b1, b1, torch.ones_like(true_b1), create_graph=True)[0]
+        #     grad_true_b2 = torch.autograd.grad(true_b2, b2, torch.ones_like(true_b2), create_graph=True)[0]
+        #     grad_true_b3 = torch.autograd.grad(true_b3, b3, torch.ones_like(true_b3), create_graph=True)[0]
+        #     grad_true_b4 = torch.autograd.grad(true_b4, b4, torch.ones_like(true_b4), create_graph=True)[0]
             
-            # Boundary normals
-            n1 = torch.ones_like(b1)
-            n1[:, 0] = 0.0
-            n2 = -torch.ones_like(b2)
-            n2[:, 0] = 0.0
-            n3 = torch.ones_like(b3)
-            n3[:, 1] = 0.0
-            n4 = -torch.ones_like(b4)
-            n4[:, 1] = 0.0
+        #     # Boundary normals
+        #     n1 = torch.ones_like(b1)
+        #     n1[:, 0] = 0.0
+        #     n2 = -torch.ones_like(b2)
+        #     n2[:, 0] = 0.0
+        #     n3 = torch.ones_like(b3)
+        #     n3[:, 1] = 0.0
+        #     n4 = -torch.ones_like(b4)
+        #     n4[:, 1] = 0.0
 
-            # Compute Neumann loss
-            temp = (torch.linalg.norm(torch.sum(grad_pred_b1 * n1, dim=1) - torch.sum(grad_true_b1 * n1, dim=1), 2)**2)/b1.shape[0]
-            temp += (torch.linalg.norm(torch.sum(grad_pred_b2 * n2, dim=1) - torch.sum(grad_true_b2 * n2, dim=1), 2)**2)/b2.shape[0]
-            temp += (torch.linalg.norm(torch.sum(grad_pred_b3 * n3, dim=1) - torch.sum(grad_true_b3 * n3, dim=1), 2)**2)/b3.shape[0]
-            temp += (torch.linalg.norm(torch.sum(grad_pred_b4 * n4, dim=1) - torch.sum(grad_true_b4 * n4, dim=1), 2)**2)/b4.shape[0]
-            loss += 100*temp
+        #     # Compute Neumann loss
+        #     temp = (torch.linalg.norm(torch.sum(grad_pred_b1 * n1, dim=1) - torch.sum(grad_true_b1 * n1, dim=1), 2)**2)/b1.shape[0]
+        #     temp += (torch.linalg.norm(torch.sum(grad_pred_b2 * n2, dim=1) - torch.sum(grad_true_b2 * n2, dim=1), 2)**2)/b2.shape[0]
+        #     temp += (torch.linalg.norm(torch.sum(grad_pred_b3 * n3, dim=1) - torch.sum(grad_true_b3 * n3, dim=1), 2)**2)/b3.shape[0]
+        #     temp += (torch.linalg.norm(torch.sum(grad_pred_b4 * n4, dim=1) - torch.sum(grad_true_b4 * n4, dim=1), 2)**2)/b4.shape[0]
+        #     loss += 100*temp
 
-        else:
-            print("Mention bdry condition")
-            raise NotImplementedError
+        # else:
+        #     print("Mention bdry condition")
+        #     raise NotImplementedError
 
         pbar.set_description(f"Loss: {loss.item()}")
         losses.append(loss.item())
@@ -424,9 +531,9 @@ def train_strong_form(dim, max_iter, size_layer, n_layers): # for square domain
     plt.savefig(f"{save_dir}/example{sys.argv[1]}/loss_{size_layer}_{n_layers}.png")
 
     # Plotting predictions
-    x = torch.tensor(np.random.uniform(config["domain"]["min"], config["domain"]["max"], (10000, 2))).to(device=device).float()
+    x = torch.tensor(np.random.uniform(config["domain"]["min"], config["domain"]["max"], (100000, 2))).to(device=device).float()
     true = u_torch(x).detach().cpu().numpy()
-    pred = model(x).squeeze().detach().cpu().numpy()
+    pred = phi(x).squeeze().detach().cpu().numpy() * model(x).squeeze().detach().cpu().numpy()
     x = x.detach().cpu().numpy()
     fig = plt.figure()
     ax = fig.add_subplot(1, 3, 1, projection='3d')
@@ -493,11 +600,11 @@ def plot():
         model.to(device=device)
         model.load_state_dict(torch.load(file, weights_only=True, map_location=device))
 
-        pred = model(x).squeeze().detach().cpu().numpy()
+        pred = phi(x).squeeze().detach().cpu().numpy() * model(x).squeeze().detach().cpu().numpy()
 
-        # Adjust the constant factor
-        const = np.mean(true - pred)
-        pred = pred + const
+        # # Adjust the constant factor
+        # const = np.mean(true - pred)
+        # pred = pred + const
 
         loss_l2 = relative_l2_loss(pred, true)
 
@@ -510,17 +617,17 @@ def plot():
         print("PINN Loss:", loss_l2)
 
         # Plot the error plots using polyscope
-        ps.init()
-        ps.set_screenshot_extension(".png")
-        ps.register_point_cloud("Surface Points", x.detach().cpu().numpy())
-        ps.get_point_cloud("Surface Points").add_scalar_quantity("True Solution", true, enabled=True)
-        ps.screenshot(f"{save_dir}/example{sys.argv[1]}/true_{size_layer}_{n_layers}.png")
+        # ps.init()
+        # ps.set_screenshot_extension(".png")
+        # ps.register_point_cloud("Surface Points", x.detach().cpu().numpy())
+        # ps.get_point_cloud("Surface Points").add_scalar_quantity("True Solution", true, enabled=True)
+        # ps.screenshot(f"{save_dir}/example{sys.argv[1]}/true_{size_layer}_{n_layers}.png")
 
-        ps.get_point_cloud("Surface Points").add_scalar_quantity("Predicted Solution", pred, enabled=True)
-        ps.screenshot(f"{save_dir}/example{sys.argv[1]}/pred_{size_layer}_{n_layers}.png")
+        # ps.get_point_cloud("Surface Points").add_scalar_quantity("Predicted Solution", pred, enabled=True)
+        # ps.screenshot(f"{save_dir}/example{sys.argv[1]}/pred_{size_layer}_{n_layers}.png")
 
-        ps.get_point_cloud("Surface Points").add_scalar_quantity("Error", np.abs(true - pred), enabled=True)
-        ps.screenshot(f"{save_dir}/example{sys.argv[1]}/error_{size_layer}_{n_layers}.png")
+        # ps.get_point_cloud("Surface Points").add_scalar_quantity("Error", np.abs(true - pred), enabled=True)
+        # ps.screenshot(f"{save_dir}/example{sys.argv[1]}/error_{size_layer}_{n_layers}.png")
 
         # FEM for 2D case
         if config["dimension"] == 2:
