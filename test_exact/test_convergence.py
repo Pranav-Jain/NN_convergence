@@ -28,19 +28,17 @@ def u_torch(v):
         x, y = v[:, 0], v[:, 1]
         a = config["domain"]["min"]
         b = config["domain"]["max"]
-        X = (x - a)/(b - a)
-        Y = (y - a)/(b - a)
 
         if sys.argv[1] == "1":
-            f = X*(1-X)*Y*(1-Y)*(X**2)
+            f = (x-a)*(x-b)*(y-a)*(y-b)*(((x-a)/(b-a))**2)
         elif sys.argv[1] == "2":
-            f = X*(1-X)*Y*(1-Y)*(X**2*Y**4)
+            f = (x-a)*(x-b)*(y-a)*(y-b)*(((x-a)/(b-a))**2 * ((y-a)/(b-a))**4)
         elif sys.argv[1] == "3":
-            f = X*(1-X)*Y*(1-Y)*(X**3 - Y**3)
+            f = (x-a)*(x-b)*(y-a)*(y-b)*(((x-a)/(b-a))**3 - ((y-a)/(b-a))**3)
         elif sys.argv[1] == "4":
-            f = (X*(1-X)*Y*(1-Y))**2
+            f = ((x-a)*(x-b)*(y-a)*(y-b))**2
         elif sys.argv[1] == "5":
-            f = (X*(1-X)*Y*(1-Y))**5
+            f = ((x-a)*(x-b)*(y-a)*(y-b))**5
         elif sys.argv[1] == "6":
             f = torch.sin(np.pi*x)*torch.sin(np.pi*y) / (-2*np.pi**2)
         elif sys.argv[1] == "7":
@@ -58,19 +56,17 @@ def u_torch(v):
         x, y = v[:, 0], v[:, 1]
         a = config["domain"]["min"]
         b = config["domain"]["max"]
-        X = (x - a)/(b - a)
-        Y = (y - a)/(b - a)
 
         if sys.argv[1] == "1":
-            f = (X*(1-X))**2 + (Y*(1-Y))**2
+            f = ((x-a)*(x-b))**2 + ((y-a)*(y-b))**2
         elif sys.argv[1] == "2":
-            f = (X*(1-X))**4 + (Y*(1-Y))**6
+            f = ((x-a)*(x-b))**3 + ((y-a)*(y-b))**3
         elif sys.argv[1] == "3":
-            f = (105*x**2 + 324*y**3) / 43125.0
+            f = ((x-a)*(x-b))**4 + ((y-a)*(y-b))**4
         elif sys.argv[1] == "4":
-            f = (-765*x**5 + 78*y**3) / 2400375.0
+            f = ((x-a)*(x-b))**2 + ((y-a)*(y-b))**5
         elif sys.argv[1] == "5":
-            f = (-685*x**8 - 546*y**9) / 1333984375.0
+            f = ((x-a)*(x-b))**4 - ((y-a)*(y-b))**6
         elif sys.argv[1] == "6":
             f = torch.cos(np.pi*x)*torch.cos(np.pi*y) / (-2*np.pi**2)
         elif sys.argv[1] == "7":
@@ -106,19 +102,17 @@ def rhs(v):
         x, y = v[:, 0], v[:, 1]
         a = config["domain"]["min"]
         b = config["domain"]["max"]
-        X = (x - a)/(b - a)
-        Y = (y - a)/(b - a)
 
         if sys.argv[1] == "1":
-            lap_u = 2*X*(X**2*(X - 1) + 3*Y*(2*X - 1)*(Y - 1))
+            lap_u = 2*(a - x)*((a - x)**2*(b - x) + 3*(a - y)*(b - y)*(a + b - 2*x))/(a - b)**2
         elif sys.argv[1] == "2":
-            lap_u = 2*X*Y**3*(5*X**2*(X - 1)*(3*Y - 2) + 3*Y**2*(2*X - 1)*(Y - 1))
+            lap_u = 2*(a - x)*(a - y)**3*(5*(a - x)**2*(b - x)*(a + 2*b - 3*y) + 3*(a - y)**2*(b - y)*(a + b - 2*x))/(a - b)**6
         elif sys.argv[1] == "3":
-            lap_u = -2*X*(X - 1)*(-X**3 + 4*Y**3 + 6*Y**2*(Y - 1)) + 2*Y*(Y - 1)*(4*X**3 + 6*X**2*(X - 1) - Y**3)
+            lap_u = 2*(-(a - x)*(b - x)*(-(a - x)**3 + 4*(a - y)**3 + 6*(a - y)**2*(b - y)) + (a - y)*(b - y)*(4*(a - x)**3 + 6*(a - x)**2*(b - x) - (a - y)**3))/(a - b)**3
         elif sys.argv[1] == "4":
-            lap_u = 2*X**2*(X - 1)**2*(Y**2 + 4*Y*(Y - 1) + (Y - 1)**2) + 2*Y**2*(Y - 1)**2*(X**2 + 4*X*(X - 1) + (X - 1)**2)
+            lap_u = 2*(a - x)**2*(b - x)**2*((a - y)**2 + 4*(a - y)*(b - y) + (b - y)**2) + 2*(a - y)**2*(b - y)**2*((a - x)**2 + 4*(a - x)*(b - x) + (b - x)**2)
         elif sys.argv[1] == "5":
-            lap_u = 10*X**3*Y**3*(X - 1)**3*(Y - 1)**3*(X**2*(X - 1)**2*(2*Y**2 + 5*Y*(Y - 1) + 2*(Y - 1)**2) + Y**2*(Y - 1)**2*(2*X**2 + 5*X*(X - 1) + 2*(X - 1)**2))
+            lap_u = 10*(a - x)**3*(a - y)**3*(b - x)**3*(b - y)**3*((a - x)**2*(b - x)**2*(2*(a - y)**2 + 5*(a - y)*(b - y) + 2*(b - y)**2) + (a - y)**2*(b - y)**2*(2*(a - x)**2 + 5*(a - x)*(b - x) + 2*(b - x)**2))
         elif sys.argv[1] == "6":
             lap_u = torch.sin(np.pi*x)*torch.sin(np.pi*y)
         elif sys.argv[1] == "7":
@@ -136,19 +130,17 @@ def rhs(v):
         x, y = v[:, 0], v[:, 1]
         a = config["domain"]["min"]
         b = config["domain"]["max"]
-        X = (x - a)/(b - a)
-        Y = (y - a)/(b - a)
 
         if sys.argv[1] == "1":
-            lap_u = (138*x) / 3090.0
+            lap_u = 2*(a - x)**2 + 8*(a - x)*(b - x) + 2*(a - y)**2 + 8*(a - y)*(b - y) + 2*(b - x)**2 + 2*(b - y)**2
         elif sys.argv[1] == "2":
-            lap_u = ((138*x)-(860*y**3)) / 137250.0
+            lap_u = 6*(a - x)*(b - x)*((a - x)**2 + 3*(a - x)*(b - x) + (b - x)**2) + 6*(a - y)*(b - y)*((a - y)**2 + 3*(a - y)*(b - y) + (b - y)**2)
         elif sys.argv[1] == "3":
-            lap_u = (6*(35+324*y)) / 43125.0
+            lap_u = 4*(a - x)**2*(b - x)**2*(3*(a - x)**2 + 8*(a - x)*(b - x) + 3*(b - x)**2) + 4*(a - y)**2*(b - y)**2*(3*(a - y)**2 + 8*(a - y)*(b - y) + 3*(b - y)**2)
         elif sys.argv[1] == "4":
-            lap_u = ((-15300*x**3)+468*y) / 2400375.0
+            lap_u = 2*(a - x)**2 + 8*(a - x)*(b - x) + 10*(a - y)**3*(b - y)**3*(2*(a - y)**2 + 5*(a - y)*(b - y) + 2*(b - y)**2) + 2*(b - x)**2
         elif sys.argv[1] == "5":
-            lap_u = (-56*((685*x**6)+(702*y**7))) / 1333984375.0
+            lap_u = 4*(a - x)**2*(b - x)**2*(3*(a - x)**2 + 8*(a - x)*(b - x) + 3*(b - x)**2) + 6*(a - y)**4*(b - y)**4*(-5*(a - y)**2 - 12*(a - y)*(b - y) - 5*(b - y)**2)
         elif sys.argv[1] == "6":
             lap_u = torch.cos(np.pi*x)*torch.cos(np.pi*y)
         elif sys.argv[1] == "7":
@@ -184,19 +176,17 @@ def u_numpy(v):
         x, y = v[:, 0], v[:, 1]
         a = config["domain"]["min"]
         b = config["domain"]["max"]
-        X = (x - a)/(b - a)
-        Y = (y - a)/(b - a)
 
         if sys.argv[1] == "1":
-            f = X*(1-X)*Y*(1-Y)*(X**2)
+            f = (x-a)*(x-b)*(y-a)*(y-b)*(((x-a)/(b-a))**2)
         elif sys.argv[1] == "2":
-            f = X*(1-X)*Y*(1-Y)*(X**2*Y**4)
+            f = (x-a)*(x-b)*(y-a)*(y-b)*(((x-a)/(b-a))**2 * ((y-a)/(b-a))**4)
         elif sys.argv[1] == "3":
-            f = X*(1-X)*Y*(1-Y)*(X**3 - Y**3)
+            f = (x-a)*(x-b)*(y-a)*(y-b)*(((x-a)/(b-a))**3 - ((y-a)/(b-a))**3)
         elif sys.argv[1] == "4":
-            f = (X*(1-X)*Y*(1-Y))**2
+            f = ((x-a)*(x-b)*(y-a)*(y-b))**2
         elif sys.argv[1] == "5":
-            f = (X*(1-X)*Y*(1-Y))**5
+            f = ((x-a)*(x-b)*(y-a)*(y-b))**5
         elif sys.argv[1] == "6":
             f = np.sin(np.pi*x)*np.sin(np.pi*y) / (-2*np.pi**2)
         elif sys.argv[1] == "7":
@@ -214,19 +204,17 @@ def u_numpy(v):
         x, y = v[:, 0], v[:, 1]
         a = config["domain"]["min"]
         b = config["domain"]["max"]
-        X = (x - a)/(b - a)
-        Y = (y - a)/(b - a)
 
         if sys.argv[1] == "1":
-            f = X*(1-X)*Y*(1-Y)*(X**2)
+            f = ((x-a)*(x-b))**2 + ((y-a)*(y-b))**2
         elif sys.argv[1] == "2":
-            f = X*(1-X)*Y*(1-Y)*(X**2*Y**4)
+            f = ((x-a)*(x-b))**3 + ((y-a)*(y-b))**3
         elif sys.argv[1] == "3":
-            f = X*(1-X)*Y*(1-Y)*(X**3 - Y**3)
+            f = ((x-a)*(x-b))**4 + ((y-a)*(y-b))**4
         elif sys.argv[1] == "4":
-            f = (X*(1-X)*Y*(1-Y))**2
+            f = ((x-a)*(x-b))**2 + ((y-a)*(y-b))**5
         elif sys.argv[1] == "5":
-            f = (X*(1-X)*Y*(1-Y))**5
+            f = ((x-a)*(x-b))**4 - ((y-a)*(y-b))**6
         elif sys.argv[1] == "6":
             f = np.cos(np.pi*x)*np.cos(np.pi*y) / (-2*np.pi**2)
         elif sys.argv[1] == "7":
@@ -467,47 +455,38 @@ def train_strong_form(dim, max_iter, size_layer, n_layers): # for square domain
         pred_b4 = model(b4).squeeze()
 
         if config["bc"] == "dirichlet":
-            temp = (torch.linalg.norm(pred_b1 - u_torch(b1), 2)**2)/b1.shape[0] 
-            temp += (torch.linalg.norm(pred_b2 - u_torch(b2), 2)**2)/b2.shape[0]
-            temp += (torch.linalg.norm(pred_b3 - u_torch(b3), 2)**2)/b3.shape[0]
-            temp += (torch.linalg.norm(pred_b4 - u_torch(b4), 2)**2)/b4.shape[0]
+            temp = (torch.linalg.norm(pred_b1, 2)**2)/b1.shape[0] 
+            temp += (torch.linalg.norm(pred_b2, 2)**2)/b2.shape[0]
+            temp += (torch.linalg.norm(pred_b3, 2)**2)/b3.shape[0]
+            temp += (torch.linalg.norm(pred_b4, 2)**2)/b4.shape[0]
             loss += 100*temp
         
-        # elif config["bc"] == "neumann":
-        #     grad_pred_b1 = torch.autograd.grad(pred_b1, b1, torch.ones_like(pred_b1), create_graph=True)[0]
-        #     grad_pred_b2 = torch.autograd.grad(pred_b2, b2, torch.ones_like(pred_b2), create_graph=True)[0]
-        #     grad_pred_b3 = torch.autograd.grad(pred_b3, b3, torch.ones_like(pred_b3), create_graph=True)[0]
-        #     grad_pred_b4 = torch.autograd.grad(pred_b4, b4, torch.ones_like(pred_b4), create_graph=True)[0]
+        elif config["bc"] == "neumann":
+            grad_pred_b1 = torch.autograd.grad(pred_b1, b1, torch.ones_like(pred_b1), create_graph=True)[0]
+            grad_pred_b2 = torch.autograd.grad(pred_b2, b2, torch.ones_like(pred_b2), create_graph=True)[0]
+            grad_pred_b3 = torch.autograd.grad(pred_b3, b3, torch.ones_like(pred_b3), create_graph=True)[0]
+            grad_pred_b4 = torch.autograd.grad(pred_b4, b4, torch.ones_like(pred_b4), create_graph=True)[0]
             
-        #     true_b1 = u_torch(b1)
-        #     true_b2 = u_torch(b2)
-        #     true_b3 = u_torch(b3)
-        #     true_b4 = u_torch(b4)
-        #     grad_true_b1 = torch.autograd.grad(true_b1, b1, torch.ones_like(true_b1), create_graph=True)[0]
-        #     grad_true_b2 = torch.autograd.grad(true_b2, b2, torch.ones_like(true_b2), create_graph=True)[0]
-        #     grad_true_b3 = torch.autograd.grad(true_b3, b3, torch.ones_like(true_b3), create_graph=True)[0]
-        #     grad_true_b4 = torch.autograd.grad(true_b4, b4, torch.ones_like(true_b4), create_graph=True)[0]
-            
-        #     # Boundary normals
-        #     n1 = torch.ones_like(b1)
-        #     n1[:, 0] = 0.0
-        #     n2 = -torch.ones_like(b2)
-        #     n2[:, 0] = 0.0
-        #     n3 = torch.ones_like(b3)
-        #     n3[:, 1] = 0.0
-        #     n4 = -torch.ones_like(b4)
-        #     n4[:, 1] = 0.0
+            # Boundary normals
+            n1 = torch.ones_like(b1)
+            n1[:, 0] = 0.0
+            n2 = -torch.ones_like(b2)
+            n2[:, 0] = 0.0
+            n3 = torch.ones_like(b3)
+            n3[:, 1] = 0.0
+            n4 = -torch.ones_like(b4)
+            n4[:, 1] = 0.0
 
-        #     # Compute Neumann loss
-        #     temp = (torch.linalg.norm(torch.sum(grad_pred_b1 * n1, dim=1) - torch.sum(grad_true_b1 * n1, dim=1), 2)**2)/b1.shape[0]
-        #     temp += (torch.linalg.norm(torch.sum(grad_pred_b2 * n2, dim=1) - torch.sum(grad_true_b2 * n2, dim=1), 2)**2)/b2.shape[0]
-        #     temp += (torch.linalg.norm(torch.sum(grad_pred_b3 * n3, dim=1) - torch.sum(grad_true_b3 * n3, dim=1), 2)**2)/b3.shape[0]
-        #     temp += (torch.linalg.norm(torch.sum(grad_pred_b4 * n4, dim=1) - torch.sum(grad_true_b4 * n4, dim=1), 2)**2)/b4.shape[0]
-        #     loss += 100*temp
+            # Compute Neumann loss
+            temp =  (torch.linalg.norm(torch.sum(grad_pred_b1 * n1, dim=1), 2)**2)/b1.shape[0]
+            temp += (torch.linalg.norm(torch.sum(grad_pred_b2 * n2, dim=1), 2)**2)/b2.shape[0]
+            temp += (torch.linalg.norm(torch.sum(grad_pred_b3 * n3, dim=1), 2)**2)/b3.shape[0]
+            temp += (torch.linalg.norm(torch.sum(grad_pred_b4 * n4, dim=1), 2)**2)/b4.shape[0]
+            loss += 100*temp
 
-        # else:
-        #     print("Mention bdry condition")
-        #     raise NotImplementedError
+        else:
+            print("Mention bdry condition")
+            raise NotImplementedError
 
         pbar.set_description(f"Loss: {loss.item()}")
         losses.append(loss.item())
@@ -533,7 +512,7 @@ def train_strong_form(dim, max_iter, size_layer, n_layers): # for square domain
     # Plotting predictions
     x = torch.tensor(np.random.uniform(config["domain"]["min"], config["domain"]["max"], (100000, 2))).to(device=device).float()
     true = u_torch(x).detach().cpu().numpy()
-    pred = phi(x).squeeze().detach().cpu().numpy() * model(x).squeeze().detach().cpu().numpy()
+    pred = model(x).squeeze().detach().cpu().numpy()
     x = x.detach().cpu().numpy()
     fig = plt.figure()
     ax = fig.add_subplot(1, 3, 1, projection='3d')
@@ -600,7 +579,7 @@ def plot():
         model.to(device=device)
         model.load_state_dict(torch.load(file, weights_only=True, map_location=device))
 
-        pred = phi(x).squeeze().detach().cpu().numpy() * model(x).squeeze().detach().cpu().numpy()
+        pred = model(x).squeeze().detach().cpu().numpy()
 
         # # Adjust the constant factor
         # const = np.mean(true - pred)
