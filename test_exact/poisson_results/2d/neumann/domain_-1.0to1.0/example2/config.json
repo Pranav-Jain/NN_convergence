@@ -2,9 +2,6 @@
     "dimension": 2,
     "bc": "neumann",
     "operation": "train",
-    "form": "strong",
-    "num_basis": 100,
-    "basis_type": "fourier",
     "threshold": 0.0,
     "domain": {
         "min": -1.0,
@@ -16,8 +13,6 @@
         "grad_clip": 10.0,
         "scheduler_patience": 1000,
         "num_samples": 10000,
-        "max_iter": 100000
-    },
-    "debug": false,
-    "memorycompare": false
+        "max_iter": 150000
+    }
 }

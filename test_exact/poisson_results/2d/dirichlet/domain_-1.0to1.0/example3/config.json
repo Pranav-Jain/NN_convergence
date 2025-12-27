@@ -2,9 +2,6 @@
     "dimension": 2,
     "bc": "dirichlet",
     "operation": "train",
-    "form": "strong",
-    "num_basis": 100,
-    "basis_type": "nn_basis",
     "threshold": 0.0,
     "domain": {
         "min": -1.0,
@@ -12,11 +9,10 @@
     },
     "architecture": {
         "lr": 0.001,
-        "num_layers": 2,
-        "grad_clip": 1.0,
-        "scheduler_patience": 2000,
-        "num_samples": 5000,
-        "max_iter": 10000
-    },
-    "debug": false
+        "num_layers": 3,
+        "grad_clip": 10.0,
+        "scheduler_patience": 1000,
+        "num_samples": 10000,
+        "max_iter": 150000
+    }
 }
