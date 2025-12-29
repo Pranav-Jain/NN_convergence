@@ -1,0 +1,68 @@
+{
+    "individual_results": [
+        {
+            "example": "example1",
+            "slope": -0.41684554480800173,
+            "correlation": -0.8204364919004915,
+            "converged": 1
+        },
+        {
+            "example": "example2",
+            "slope": -0.6344500043340606,
+            "correlation": -0.9775923391530518,
+            "converged": 1
+        },
+        {
+            "example": "example3",
+            "slope": -0.19671966335506036,
+            "correlation": -0.787287135321109,
+            "converged": 0
+        },
+        {
+            "example": "example4",
+            "slope": -0.11269093484198493,
+            "correlation": -0.36652596413704713,
+            "converged": 0
+        },
+        {
+            "example": "example5",
+            "slope": -0.21295406032043604,
+            "correlation": -0.8811341991825264,
+            "converged": 0
+        },
+        {
+            "example": "example6",
+            "slope": -0.45856511026443564,
+            "correlation": -0.912023878200851,
+            "converged": 1
+        },
+        {
+            "example": "example7",
+            "slope": -0.47657497892660056,
+            "correlation": -0.95540402875089,
+            "converged": 1
+        },
+        {
+            "example": "example8",
+            "slope": -0.578900155549868,
+            "correlation": -0.966437262082567,
+            "converged": 1
+        },
+        {
+            "example": "example9",
+            "slope": -0.7942160058915615,
+            "correlation": -0.9788102010675843,
+            "converged": 1
+        },
+        {
+            "example": "example10",
+            "slope": -1.1321017538813423,
+            "correlation": -0.9724995451945195,
+            "converged": 1
+        }
+    ],
+    "num_converged": 7,
+    "total_examples": 10,
+    "fraction_converged": 0.7,
+    "overall_converged": 0
+}
