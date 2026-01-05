@@ -53,7 +53,7 @@ def u_numpy(v):
             else:
                 raise NotImplementedError()
 
-        if config["bc"] == "neumann":
+        elif config["bc"] == "neumann":
             if sys.argv[1] == "1":
                 f = (x-a)**12*(x-b)**11*(y-a)**5*(y-b)**9
             elif sys.argv[1] == "2":
@@ -61,19 +61,19 @@ def u_numpy(v):
             elif sys.argv[1] == "3":
                 f = (x-a)**5*(x-b)**8*(y-a)**3*(y-b)**2
             elif sys.argv[1] == "4":
-                f = (x-a)**8*(x-b)*(y-a)**7*(y-b)**6
+                f = (x-a)**8*(x-b)**3*(y-a)**7*(y-b)**6
             elif sys.argv[1] == "5":
                 f = (x-a)**12*(x-b)**3*(y-a)**5*(y-b)**2
             elif sys.argv[1] == "6":
-                f = np.cos(10*np.pi*(x-a)/(b-a))*np.cos(9*np.pi*(y-a)/(b-a))
+                f = np.cos(10*np.pi*(x-a))*np.cos(9*np.pi*(y-a))
             elif sys.argv[1] == "7":
-                f = np.cos(15*np.pi*(x-a)/(b-a))*np.cos(17*np.pi*(y-a)/(b-a))
+                f = np.cos(15*np.pi*(x-a))*np.cos(17*np.pi*(y-a))
             elif sys.argv[1] == "8":
-                f = np.cos(12*np.pi*(x-a)/(b-a))*np.cos(14*np.pi*(y-a)/(b-a))
+                f = np.cos(12*np.pi*(x-a))*np.cos(14*np.pi*(y-a))
             elif sys.argv[1] == "9":
-                f = np.cos(3*np.pi*(x-a)/(b-a))**3*np.cos(np.pi*(y-a)/(b-a))**5
+                f = np.cos(3*np.pi*(x-a))**3*np.cos(np.pi*(y-a))**5
             elif sys.argv[1] == "10":
-                f = np.cos(2*np.pi*(x-a)/(b-a))**6*np.cos(3*np.pi*(y-a)/(b-a))**9
+                f = np.cos(2*np.pi*(x-a))**6*np.cos(3*np.pi*(y-a))**9
             else:
                 raise NotImplementedError()
         
@@ -137,19 +137,19 @@ def u_torch(v):
             elif sys.argv[1] == "5":
                 f = (x-a)**12*(x-b)**3*(y-a)**5*(y-b)**2
             elif sys.argv[1] == "6":
-                f = torch.sin(10*np.pi*(x-a)/(b-a))*torch.sin(9*np.pi*(y-a)/(b-a))
+                f = torch.sin(10*np.pi*(x-a))*torch.sin(9*np.pi*(y-a))
             elif sys.argv[1] == "7":
-                f = torch.sin(15*np.pi*(x-a)/(b-a))*torch.sin(17*np.pi*(y-a)/(b-a))
+                f = torch.sin(15*np.pi*(x-a))*torch.sin(17*np.pi*(y-a))
             elif sys.argv[1] == "8":
-                f = torch.sin(12*np.pi*(x-a)/(b-a))*torch.sin(14*np.pi*(y-a)/(b-a))
+                f = torch.sin(12*np.pi*(x-a))*torch.sin(14*np.pi*(y-a))
             elif sys.argv[1] == "9":
-                f = torch.sin(3*np.pi*(x-a)/(b-a))**3*torch.sin(np.pi*(y-a)/(b-a))**5
+                f = torch.sin(3*np.pi*(x-a))**3*torch.sin(np.pi*(y-a))**5
             elif sys.argv[1] == "10":
-                f = torch.sin(2*np.pi*(x-a)/(b-a))**6*torch.sin(3*np.pi*(y-a)/(b-a))**9
+                f = torch.sin(2*np.pi*(x-a))**6*torch.sin(3*np.pi*(y-a))**9
             else:
                 raise NotImplementedError()
             
-        if config["bc"] == "neumann":
+        elif config["bc"] == "neumann":
             if sys.argv[1] == "1":
                 f = (x-a)**12*(x-b)**11*(y-a)**5*(y-b)**9
             elif sys.argv[1] == "2":
@@ -157,7 +157,7 @@ def u_torch(v):
             elif sys.argv[1] == "3":
                 f = (x-a)**5*(x-b)**8*(y-a)**3*(y-b)**2
             elif sys.argv[1] == "4":
-                f = (x-a)**8*(x-b)*(y-a)**7*(y-b)**6
+                f = (x-a)**8*(x-b)**3*(y-a)**7*(y-b)**6
             elif sys.argv[1] == "5":
                 f = (x-a)**12*(x-b)**3*(y-a)**5*(y-b)**2
             elif sys.argv[1] == "6":
@@ -245,7 +245,7 @@ def rhs(v):
             else:
                 raise NotImplementedError()
             
-        if config["bc"] == "neumann":
+        elif config["bc"] == "neumann":
             if sys.argv[1] == "1":
                 lap_u = (a - x)**10*(a - y)**3*(b - x)**9*(b - y)**7*((a - x)*(a - y)*(b - x)*(b - y)*(x**2*y*(a - x)*(b - x)*(9*a + 5*b - 14*y) + x*y**2*(a - y)*(b - y)*(11*a + 12*b - 23*x) - x*(a - y)*(b - y)*(y**2 + 1)*(11*a + 12*b - 23*x) - y*(a - x)*(b - x)*(x**2 + 1)*(9*a + 5*b - 14*y)) + (x**2 + y**2 + 1)*(2*x*y*(a - x)*(a - y)*(b - x)*(b - y)*(99*(a - x)*(a - y) + 55*(a - x)*(b - y) + 108*(a - y)*(b - x) + 60*(b - x)*(b - y)) - x*(a - x)*(a - y)**2*(b - x)*(b - y)**2*(11*a + 12*b - 23*x) - y*(a - x)**2*(a - y)*(b - x)**2*(b - y)*(9*a + 5*b - 14*y) - 2*(a - x)**2*(b - x)**2*(x**2 + 1)*(36*(a - y)**2 + 45*(a - y)*(b - y) + 10*(b - y)**2) - 22*(a - y)**2*(b - y)**2*(y**2 + 1)*(5*(a - x)**2 + 12*(a - x)*(b - x) + 6*(b - x)**2)))/(x**2 + y**2 + 1)**2
             elif sys.argv[1] == "2":
@@ -253,19 +253,19 @@ def rhs(v):
             elif sys.argv[1] == "3":
                 lap_u = (a - x)**3*(a - y)*(b - x)**6*((a - x)*(a - y)*(b - x)*(x**2*y*(a - x)*(b - x)*(2*(a - y)*(-b + y) - 3*(b - y)**2) + x*y**2*(a - y)*(b - y)**2*(-8*a - 5*b + 13*x) - x*(a - y)*(b - y)**2*(y**2 + 1)*(-8*a - 5*b + 13*x) - y*(a - x)*(b - x)*(x**2 + 1)*(2*(a - y)*(-b + y) - 3*(b - y)**2)) + (x**2 + y**2 + 1)*(-2*x*y*(a - x)*(a - y)*(b - x)*(b - y)*(16*(a - x)*(a - y) + 24*(a - x)*(b - y) + 10*(a - y)*(b - x) + 15*(b - x)*(b - y)) - x*(a - x)*(a - y)**2*(b - x)*(b - y)**2*(-8*a - 5*b + 13*x) - y*(a - x)**2*(a - y)*(b - x)**2*(2*(a - y)*(-b + y) - 3*(b - y)**2) + 2*(a - x)**2*(b - x)**2*(x**2 + 1)*((a - y)**2 + 6*(a - y)*(b - y) + 3*(b - y)**2) + 4*(a - y)**2*(b - y)**2*(y**2 + 1)*(14*(a - x)**2 + 20*(a - x)*(b - x) + 5*(b - x)**2)))/(x**2 + y**2 + 1)**2
             elif sys.argv[1] == "4":
-                lap_u = (a - x)**6*(a - y)**5*(b - y)**4*((a - x)*(a - y)*(b - y)*(x**2*y*(a - x)*(-b + x)*(6*a + 7*b - 13*y) + x*y**2*(a - y)*(b - y)*(-a - 8*b + 9*x) - x*(a - y)*(b - y)*(y**2 + 1)*(-a - 8*b + 9*x) - y*(a - x)*(-b + x)*(x**2 + 1)*(6*a + 7*b - 13*y)) + (x**2 + y**2 + 1)*(-2*x*y*(a - x)*(a - y)*(b - y)*(6*(a - x)*(a - y) + 7*(a - x)*(b - y) + 48*(a - y)*(b - x) + 56*(b - x)*(b - y)) - x*(a - x)*(a - y)**2*(b - y)**2*(-a - 8*b + 9*x) - y*(a - x)**2*(a - y)*(-b + x)*(b - y)*(6*a + 7*b - 13*y) + 6*(a - x)**2*(b - x)*(x**2 + 1)*(5*(a - y)**2 + 14*(a - y)*(b - y) + 7*(b - y)**2) + 8*(a - y)**2*(b - y)**2*(y**2 + 1)*(2*a + 7*b - 9*x)))/(x**2 + y**2 + 1)**2
+                lap_u = (a - x)**6*(a - y)**5*(b - x)*(b - y)**4*((a - x)*(a - y)*(b - x)*(b - y)*(x**2*y*(a - x)*(b - x)*(-6*a - 7*b + 13*y) + x*y**2*(a - y)*(b - y)*(-3*a - 8*b + 11*x) - x*(a - y)*(b - y)*(y**2 + 1)*(-3*a - 8*b + 11*x) - y*(a - x)*(b - x)*(x**2 + 1)*(-6*a - 7*b + 13*y)) + (x**2 + y**2 + 1)*(-2*x*y*(a - x)*(a - y)*(b - x)*(b - y)*(18*(a - x)*(a - y) + 21*(a - x)*(b - y) + 48*(a - y)*(b - x) + 56*(b - x)*(b - y)) - x*(a - x)*(a - y)**2*(b - x)*(b - y)**2*(-3*a - 8*b + 11*x) - y*(a - x)**2*(a - y)*(b - x)**2*(b - y)*(-6*a - 7*b + 13*y) + 6*(a - x)**2*(b - x)**2*(x**2 + 1)*(5*(a - y)**2 + 14*(a - y)*(b - y) + 7*(b - y)**2) + 2*(a - y)**2*(b - y)**2*(y**2 + 1)*(3*(a - x)**2 + 24*(a - x)*(b - x) + 28*(b - x)**2)))/(x**2 + y**2 + 1)**2
             elif sys.argv[1] == "5":
                 lap_u = (a - x)**10*(a - y)**3*(b - x)*((a - x)*(a - y)*(b - x)*(x**2*y*(a - x)*(b - x)*(2*(a - y)*(-b + y) - 5*(b - y)**2) + 3*x*y**2*(a - y)*(b - y)**2*(-a - 4*b + 5*x) - 3*x*(a - y)*(b - y)**2*(y**2 + 1)*(-a - 4*b + 5*x) - y*(a - x)*(b - x)*(x**2 + 1)*(2*(a - y)*(-b + y) - 5*(b - y)**2)) + (x**2 + y**2 + 1)*(-6*x*y*(a - x)*(a - y)*(b - x)*(b - y)*(2*(a - x)*(a - y) + 5*(a - x)*(b - y) + 8*(a - y)*(b - x) + 20*(b - x)*(b - y)) - 3*x*(a - x)*(a - y)**2*(b - x)*(b - y)**2*(-a - 4*b + 5*x) - y*(a - x)**2*(a - y)*(b - x)**2*(2*(a - y)*(-b + y) - 5*(b - y)**2) + 2*(a - x)**2*(b - x)**2*(x**2 + 1)*((a - y)**2 + 10*(a - y)*(b - y) + 10*(b - y)**2) + 6*(a - y)**2*(b - y)**2*(y**2 + 1)*((a - x)**2 + 12*(a - x)*(b - x) + 22*(b - x)**2)))/(x**2 + y**2 + 1)**2
             elif sys.argv[1] == "6":
-                lap_u = np.pi*((-a + b)*(-9*x**2*y*torch.sin(9*np.pi*(a - y)/(a - b))*torch.cos(10*np.pi*(a - x)/(a - b)) - 10*x*y**2*torch.sin(10*np.pi*(a - x)/(a - b))*torch.cos(9*np.pi*(a - y)/(a - b)) + 10*x*(y**2 + 1)*torch.sin(10*np.pi*(a - x)/(a - b))*torch.cos(9*np.pi*(a - y)/(a - b)) + 9*y*(x**2 + 1)*torch.sin(9*np.pi*(a - y)/(a - b))*torch.cos(10*np.pi*(a - x)/(a - b))) - (a - b)*(10*x*torch.sin(10*np.pi*(a - x)/(a - b))*torch.cos(9*np.pi*(a - y)/(a - b)) + 9*y*torch.sin(9*np.pi*(a - y)/(a - b))*torch.cos(10*np.pi*(a - x)/(a - b)))*(x**2 + y**2 + 1) - np.pi*(x**2 + y**2 + 1)*(180*x*y*torch.sin(10*np.pi*(a - x)/(a - b))*torch.sin(9*np.pi*(a - y)/(a - b)) + 81*(x**2 + 1)*torch.cos(10*np.pi*(a - x)/(a - b))*torch.cos(9*np.pi*(a - y)/(a - b)) + 100*(y**2 + 1)*torch.cos(10*np.pi*(a - x)/(a - b))*torch.cos(9*np.pi*(a - y)/(a - b))))/((a - b)**2*(x**2 + y**2 + 1)**2)
+                lap_u = np.pi*(9*x**2*y*torch.sin(np.pi*(9*a - 9*y))*torch.cos(np.pi*(10*a - 10*x)) + 10*x*y**2*torch.sin(np.pi*(10*a - 10*x))*torch.cos(np.pi*(9*a - 9*y)) - 10*x*(y**2 + 1)*torch.sin(np.pi*(10*a - 10*x))*torch.cos(np.pi*(9*a - 9*y)) - 9*y*(x**2 + 1)*torch.sin(np.pi*(9*a - 9*y))*torch.cos(np.pi*(10*a - 10*x)) - (x**2 + y**2 + 1)*(180*np.pi*x*y*torch.sin(np.pi*(9*a - 9*y))*torch.sin(np.pi*(10*a - 10*x)) + 10*x*torch.sin(np.pi*(10*a - 10*x))*torch.cos(np.pi*(9*a - 9*y)) + 9*y*torch.sin(np.pi*(9*a - 9*y))*torch.cos(np.pi*(10*a - 10*x)) + 81*np.pi*(x**2 + 1)*torch.cos(np.pi*(9*a - 9*y))*torch.cos(np.pi*(10*a - 10*x)) + 100*np.pi*(y**2 + 1)*torch.cos(np.pi*(9*a - 9*y))*torch.cos(np.pi*(10*a - 10*x))))/(x**2 + y**2 + 1)**2
             elif sys.argv[1] == "7":
-                lap_u = np.pi*((-a + b)*(15*x*torch.sin(15*np.pi*(a - x)/(a - b))*torch.cos(17*np.pi*(a - y)/(a - b)) + 17*y*torch.sin(17*np.pi*(a - y)/(a - b))*torch.cos(15*np.pi*(a - x)/(a - b))) - (a - b)*(15*x*torch.sin(15*np.pi*(a - x)/(a - b))*torch.cos(17*np.pi*(a - y)/(a - b)) + 17*y*torch.sin(17*np.pi*(a - y)/(a - b))*torch.cos(15*np.pi*(a - x)/(a - b)))*(x**2 + y**2 + 1) - np.pi*(x**2 + y**2 + 1)*(510*x*y*torch.sin(15*np.pi*(a - x)/(a - b))*torch.sin(17*np.pi*(a - y)/(a - b)) + 289*(x**2 + 1)*torch.cos(15*np.pi*(a - x)/(a - b))*torch.cos(17*np.pi*(a - y)/(a - b)) + 225*(y**2 + 1)*torch.cos(15*np.pi*(a - x)/(a - b))*torch.cos(17*np.pi*(a - y)/(a - b))))/((a - b)**2*(x**2 + y**2 + 1)**2)
+                lap_u = np.pi*(17*x**2*y*torch.sin(np.pi*(17*a - 17*y))*torch.cos(np.pi*(15*a - 15*x)) + 15*x*y**2*torch.sin(np.pi*(15*a - 15*x))*torch.cos(np.pi*(17*a - 17*y)) - 15*x*(y**2 + 1)*torch.sin(np.pi*(15*a - 15*x))*torch.cos(np.pi*(17*a - 17*y)) - 17*y*(x**2 + 1)*torch.sin(np.pi*(17*a - 17*y))*torch.cos(np.pi*(15*a - 15*x)) - (x**2 + y**2 + 1)*(510*np.pi*x*y*torch.sin(np.pi*(15*a - 15*x))*torch.sin(np.pi*(17*a - 17*y)) + 15*x*torch.sin(np.pi*(15*a - 15*x))*torch.cos(np.pi*(17*a - 17*y)) + 17*y*torch.sin(np.pi*(17*a - 17*y))*torch.cos(np.pi*(15*a - 15*x)) + 289*np.pi*(x**2 + 1)*torch.cos(np.pi*(15*a - 15*x))*torch.cos(np.pi*(17*a - 17*y)) + 225*np.pi*(y**2 + 1)*torch.cos(np.pi*(15*a - 15*x))*torch.cos(np.pi*(17*a - 17*y))))/(x**2 + y**2 + 1)**2
             elif sys.argv[1] == "8":
-                lap_u = 2*np.pi*((-a + b)*(-7*x**2*y*torch.sin(14*np.pi*(a - y)/(a - b))*torch.cos(12*np.pi*(a - x)/(a - b)) - 6*x*y**2*torch.sin(12*np.pi*(a - x)/(a - b))*torch.cos(14*np.pi*(a - y)/(a - b)) + 6*x*(y**2 + 1)*torch.sin(12*np.pi*(a - x)/(a - b))*torch.cos(14*np.pi*(a - y)/(a - b)) + 7*y*(x**2 + 1)*torch.sin(14*np.pi*(a - y)/(a - b))*torch.cos(12*np.pi*(a - x)/(a - b))) - (a - b)*(6*x*torch.sin(12*np.pi*(a - x)/(a - b))*torch.cos(14*np.pi*(a - y)/(a - b)) + 7*y*torch.sin(14*np.pi*(a - y)/(a - b))*torch.cos(12*np.pi*(a - x)/(a - b)))*(x**2 + y**2 + 1) - 2*np.pi*(x**2 + y**2 + 1)*(84*x*y*torch.sin(12*np.pi*(a - x)/(a - b))*torch.sin(14*np.pi*(a - y)/(a - b)) + 49*(x**2 + 1)*torch.cos(12*np.pi*(a - x)/(a - b))*torch.cos(14*np.pi*(a - y)/(a - b)) + 36*(y**2 + 1)*torch.cos(12*np.pi*(a - x)/(a - b))*torch.cos(14*np.pi*(a - y)/(a - b))))/((a - b)**2*(x**2 + y**2 + 1)**2)
+                lap_u = 2*np.pi*(7*x**2*y*torch.sin(np.pi*(14*a - 14*y))*torch.cos(np.pi*(12*a - 12*x)) + 6*x*y**2*torch.sin(np.pi*(12*a - 12*x))*torch.cos(np.pi*(14*a - 14*y)) - 6*x*(y**2 + 1)*torch.sin(np.pi*(12*a - 12*x))*torch.cos(np.pi*(14*a - 14*y)) - 7*y*(x**2 + 1)*torch.sin(np.pi*(14*a - 14*y))*torch.cos(np.pi*(12*a - 12*x)) - (x**2 + y**2 + 1)*(168*np.pi*x*y*torch.sin(np.pi*(12*a - 12*x))*torch.sin(np.pi*(14*a - 14*y)) + 6*x*torch.sin(np.pi*(12*a - 12*x))*torch.cos(np.pi*(14*a - 14*y)) + 7*y*torch.sin(np.pi*(14*a - 14*y))*torch.cos(np.pi*(12*a - 12*x)) + 98*np.pi*(x**2 + 1)*torch.cos(np.pi*(12*a - 12*x))*torch.cos(np.pi*(14*a - 14*y)) + 72*np.pi*(y**2 + 1)*torch.cos(np.pi*(12*a - 12*x))*torch.cos(np.pi*(14*a - 14*y))))/(x**2 + y**2 + 1)**2
             elif sys.argv[1] == "9":
-                lap_u = np.pi*((-a + b)*(9*x*torch.sin(3*np.pi*(a - x)/(a - b))*torch.cos(np.pi*(a - y)/(a - b)) + 5*y*torch.sin(np.pi*(a - y)/(a - b))*torch.cos(3*np.pi*(a - x)/(a - b)))*torch.cos(3*np.pi*(a - x)/(a - b))*torch.cos(np.pi*(a - y)/(a - b)) - (a - b)*(9*x*torch.sin(3*np.pi*(a - x)/(a - b))*torch.cos(np.pi*(a - y)/(a - b)) + 5*y*torch.sin(np.pi*(a - y)/(a - b))*torch.cos(3*np.pi*(a - x)/(a - b)))*(x**2 + y**2 + 1)*torch.cos(3*np.pi*(a - x)/(a - b))*torch.cos(np.pi*(a - y)/(a - b)) + np.pi*(x**2 + y**2 + 1)*(-45*x*y*(-torch.cos(2*np.pi*(-4*a + 3*x + y)/(a - b)) + torch.cos(2*np.pi*(2*a - 3*x + y)/(a - b))) + 80*(x**2 + 1)*torch.sin(np.pi*(a - y)/(a - b))**2*torch.cos(3*np.pi*(a - x)/(a - b))**2 - 20*(x**2 + 1)*torch.cos(3*np.pi*(a - x)/(a - b))**2*torch.cos(np.pi*(a - y)/(a - b))**2 + 216*(y**2 + 1)*torch.sin(3*np.pi*(a - x)/(a - b))**2*torch.cos(np.pi*(a - y)/(a - b))**2 - 108*(y**2 + 1)*torch.cos(3*np.pi*(a - x)/(a - b))**2*torch.cos(np.pi*(a - y)/(a - b))**2)/4)*torch.cos(3*np.pi*(a - x)/(a - b))*torch.cos(np.pi*(a - y)/(a - b))**3/((a - b)**2*(x**2 + y**2 + 1)**2)
+                lap_u = np.pi*(-(9*x*torch.sin(np.pi*(3*a - 3*x))*torch.cos(np.pi*(a - y)) + 5*y*torch.sin(np.pi*(a - y))*torch.cos(np.pi*(3*a - 3*x)))*torch.cos(np.pi*(a - y))*torch.cos(np.pi*(3*a - 3*x)) + (x**2 + y**2 + 1)*(-45*np.pi*x*y*(-torch.cos(np.pi*(-8*a + 6*x + 2*y)) + torch.cos(np.pi*(4*a - 6*x + 2*y))) - 36*x*torch.sin(np.pi*(3*a - 3*x))*torch.cos(np.pi*(a - y))**2*torch.cos(np.pi*(3*a - 3*x)) - 20*y*torch.sin(np.pi*(a - y))*torch.cos(np.pi*(a - y))*torch.cos(np.pi*(3*a - 3*x))**2 + 80*np.pi*(x**2 + 1)*torch.sin(np.pi*(a - y))**2*torch.cos(np.pi*(3*a - 3*x))**2 - 20*np.pi*(x**2 + 1)*torch.cos(np.pi*(a - y))**2*torch.cos(np.pi*(3*a - 3*x))**2 + 216*np.pi*(y**2 + 1)*torch.sin(np.pi*(3*a - 3*x))**2*torch.cos(np.pi*(a - y))**2 - 108*np.pi*(y**2 + 1)*torch.cos(np.pi*(a - y))**2*torch.cos(np.pi*(3*a - 3*x))**2)/4)*torch.cos(np.pi*(a - y))**3*torch.cos(np.pi*(3*a - 3*x))/(x**2 + y**2 + 1)**2
             elif sys.argv[1] == "10":
-                lap_u = 3*np.pi*((-a + b)*(8*x*torch.sin(4*np.pi*(a - x)/(a - b)) - 4*x*torch.sin(2*np.pi*(-5*a + 2*x + 3*y)/(a - b)) - 4*x*torch.sin(2*np.pi*(a + 2*x - 3*y)/(a - b)) + 18*y*torch.sin(6*np.pi*(a - y)/(a - b)) - 9*y*torch.sin(2*np.pi*(-5*a + 2*x + 3*y)/(a - b)) + 9*y*torch.sin(2*np.pi*(a + 2*x - 3*y)/(a - b)))/8 - (a - b)*(4*x*torch.sin(2*np.pi*(a - x)/(a - b))*torch.cos(3*np.pi*(a - y)/(a - b)) + 9*y*torch.sin(3*np.pi*(a - y)/(a - b))*torch.cos(2*np.pi*(a - x)/(a - b)))*(x**2 + y**2 + 1)*torch.cos(2*np.pi*(a - x)/(a - b))*torch.cos(3*np.pi*(a - y)/(a - b)) + np.pi*(x**2 + y**2 + 1)*(-27*x*y*(-torch.cos(2*np.pi*(-5*a + 2*x + 3*y)/(a - b)) + torch.cos(2*np.pi*(a + 2*x - 3*y)/(a - b))) + 216*(x**2 + 1)*torch.sin(3*np.pi*(a - y)/(a - b))**2*torch.cos(2*np.pi*(a - x)/(a - b))**2 - 27*(x**2 + 1)*torch.cos(2*np.pi*(a - x)/(a - b))**2*torch.cos(3*np.pi*(a - y)/(a - b))**2 + 40*(y**2 + 1)*torch.sin(2*np.pi*(a - x)/(a - b))**2*torch.cos(3*np.pi*(a - y)/(a - b))**2 - 8*(y**2 + 1)*torch.cos(2*np.pi*(a - x)/(a - b))**2*torch.cos(3*np.pi*(a - y)/(a - b))**2))*torch.cos(2*np.pi*(a - x)/(a - b))**4*torch.cos(3*np.pi*(a - y)/(a - b))**7/((a - b)**2*(x**2 + y**2 + 1)**2)
+                lap_u = 3*np.pi*(-x*torch.sin(np.pi*(4*a - 4*x)) + x*torch.sin(np.pi*(-10*a + 4*x + 6*y))/2 + x*torch.sin(np.pi*(2*a + 4*x - 6*y))/2 - 9*y*torch.sin(np.pi*(6*a - 6*y))/4 + 9*y*torch.sin(np.pi*(-10*a + 4*x + 6*y))/8 - 9*y*torch.sin(np.pi*(2*a + 4*x - 6*y))/8 + (x**2 + y**2 + 1)*(-27*np.pi*x*y*(-torch.cos(np.pi*(-10*a + 4*x + 6*y)) + torch.cos(np.pi*(2*a + 4*x - 6*y))) - 4*x*torch.sin(np.pi*(2*a - 2*x))*torch.cos(np.pi*(2*a - 2*x))*torch.cos(np.pi*(3*a - 3*y))**2 - 9*y*torch.sin(np.pi*(3*a - 3*y))*torch.cos(np.pi*(2*a - 2*x))**2*torch.cos(np.pi*(3*a - 3*y)) + 216*np.pi*(x**2 + 1)*torch.sin(np.pi*(3*a - 3*y))**2*torch.cos(np.pi*(2*a - 2*x))**2 - 27*np.pi*(x**2 + 1)*torch.cos(np.pi*(2*a - 2*x))**2*torch.cos(np.pi*(3*a - 3*y))**2 + 40*np.pi*(y**2 + 1)*torch.sin(np.pi*(2*a - 2*x))**2*torch.cos(np.pi*(3*a - 3*y))**2 - 8*np.pi*(y**2 + 1)*torch.cos(np.pi*(2*a - 2*x))**2*torch.cos(np.pi*(3*a - 3*y))**2))*torch.cos(np.pi*(2*a - 2*x))**4*torch.cos(np.pi*(3*a - 3*y))**7/(x**2 + y**2 + 1)**2
             else:
                 raise NotImplementedError()
         
