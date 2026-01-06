@@ -137,15 +137,15 @@ def u_torch(v):
             elif sys.argv[1] == "5":
                 f = (x-a)**12*(x-b)**3*(y-a)**5*(y-b)**2
             elif sys.argv[1] == "6":
-                f = torch.sin(10*np.pi*(x-a))*torch.sin(9*np.pi*(y-a))
+                f = torch.sin(10*np.pi*(x-a)/(b-a))*torch.sin(9*np.pi*(y-a)/(b-a))
             elif sys.argv[1] == "7":
-                f = torch.sin(15*np.pi*(x-a))*torch.sin(17*np.pi*(y-a))
+                f = torch.sin(15*np.pi*(x-a)/(b-a))*torch.sin(17*np.pi*(y-a)/(b-a))
             elif sys.argv[1] == "8":
-                f = torch.sin(12*np.pi*(x-a))*torch.sin(14*np.pi*(y-a))
+                f = torch.sin(12*np.pi*(x-a)/(b-a))*torch.sin(14*np.pi*(y-a)/(b-a))
             elif sys.argv[1] == "9":
-                f = torch.sin(3*np.pi*(x-a))**3*torch.sin(np.pi*(y-a))**5
+                f = torch.sin(3*np.pi*(x-a)/(b-a))**3*torch.sin(np.pi*(y-a)/(b-a))**5
             elif sys.argv[1] == "10":
-                f = torch.sin(2*np.pi*(x-a))**6*torch.sin(3*np.pi*(y-a))**9
+                f = torch.sin(2*np.pi*(x-a)/(b-a))**6*torch.sin(3*np.pi*(y-a)/(b-a))**9
             else:
                 raise NotImplementedError()
             
@@ -161,15 +161,15 @@ def u_torch(v):
             elif sys.argv[1] == "5":
                 f = (x-a)**12*(x-b)**3*(y-a)**5*(y-b)**2
             elif sys.argv[1] == "6":
-                f = torch.cos(10*np.pi*(x-a)/(b-a))*torch.cos(9*np.pi*(y-a)/(b-a))
+                f = torch.cos(10*np.pi*(x-a))*torch.cos(9*np.pi*(y-a))
             elif sys.argv[1] == "7":
-                f = torch.cos(15*np.pi*(x-a)/(b-a))*torch.cos(17*np.pi*(y-a)/(b-a))
+                f = torch.cos(15*np.pi*(x-a))*torch.cos(17*np.pi*(y-a))
             elif sys.argv[1] == "8":
-                f = torch.cos(12*np.pi*(x-a)/(b-a))*torch.cos(14*np.pi*(y-a)/(b-a))
+                f = torch.cos(12*np.pi*(x-a))*torch.cos(14*np.pi*(y-a))
             elif sys.argv[1] == "9":
-                f = torch.cos(3*np.pi*(x-a)/(b-a))**3*torch.cos(np.pi*(y-a)/(b-a))**5
+                f = torch.cos(3*np.pi*(x-a))**3*torch.cos(np.pi*(y-a))**5
             elif sys.argv[1] == "10":
-                f = torch.cos(2*np.pi*(x-a)/(b-a))**6*torch.cos(3*np.pi*(y-a)/(b-a))**9
+                f = torch.cos(2*np.pi*(x-a))**6*torch.cos(3*np.pi*(y-a))**9
             else:
                 raise NotImplementedError()
     
