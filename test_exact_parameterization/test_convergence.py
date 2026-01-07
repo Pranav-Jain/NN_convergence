@@ -386,7 +386,9 @@ def get_normals(v, S_theta=None):
 
 def get_bdry_points(n, device):
     if config["surface"] == "heightfield":
-        b = torch.tensor(np.random.uniform(config["domain"]["min"], config["domain"]["max"], (n))).to(device=device).requires_grad_(True).float()
+        # Since, the normals are discontinuous near the corners, we avoid sampling points too close to the corners
+        eps = 0.1
+        b = torch.tensor(np.random.uniform(config["domain"]["min"] + eps, config["domain"]["max"] - eps, (n))).to(device=device).requires_grad_(True).float()
         b1 = torch.stack([b, torch.ones_like(b)*config["domain"]["min"]], dim=1)
         b2 = torch.stack([b, torch.ones_like(b)*config["domain"]["max"]], dim=1)
         b3 = torch.stack([torch.ones_like(b)*config["domain"]["min"], b], dim=1)
@@ -439,12 +441,12 @@ def train_strong_form(l_model, device, n, size_layer, n_layers):
 
             true_lap = rhs(v_cart)
 
-            loss = torch.linalg.norm(laplacian_pred - true_lap, 2)**2
+            loss = torch.mean((laplacian_pred - true_lap)**2)
             
             ## DIRICHLET CONDITION ##
             if config["bc"] == "dirichlet" and config["surface"] != "ellipsoid":
                 bdry_points = get_bdry_points(n, device)
-                loss = loss + 1*(torch.linalg.norm(l_model(bdry_points).squeeze(), 2)**2)  # Dirichlet boundary condition
+                loss = loss + 1*torch.linalg.norm(l_model(bdry_points).squeeze())**2  # Dirichlet boundary condition
 
             ## NEUMANN CONDITION ##
             elif config["bc"] == "neumann" and config["surface"] != "ellipsoid":
@@ -498,13 +500,13 @@ def train_strong_form(l_model, device, n, size_layer, n_layers):
 
                 flux_pred = torch.sum(grad_bdry_surface * n_boundary_tan, dim=1)
 
-                loss = loss + 100*(torch.linalg.norm(flux_pred, 2)**2)  # Neumann boundary condition
+                loss = loss + 1*torch.linalg.norm(flux_pred)**2  # Neumann boundary condition
 
                 # # --- enforce zero-mean solution on heightfield ---
                 u_pred = l_model(v_cart).squeeze()
                 metric = torch.sqrt(1 + v_cart[:, 0]**2 + v_cart[:, 1]**2)      # surface metric factor
                 mean_u = torch.sum(u_pred * metric) / torch.sum(metric)
-                loss = loss + 100*mean_u**2
+                loss = loss + 1*mean_u**2
             
             loss.backward()
             if not torch.isnan(loss):
