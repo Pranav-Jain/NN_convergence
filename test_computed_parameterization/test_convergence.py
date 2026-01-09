@@ -127,11 +127,6 @@ def train_strong_form(l_model, device, n, size_layer, n_layers):
     surf_normal_model.to(device=device)
     surf_normal_model.load_state_dict(torch.load(f"../data/model_{config['surface']}_normal.pth", weights_only=True, map_location=device))
     surf_normal_model.requires_grad_(True)
-
-    bdry_normal_model = MLP_normals(n=64, n_layers=5, in_dim=3, out_dim=3)
-    bdry_normal_model.to(device=device)
-    bdry_normal_model.load_state_dict(torch.load(f"../data/model_{config['surface']}_bdry_normal.pth", weights_only=True, map_location=device))
-    bdry_normal_model.requires_grad_(True)
     
     losses = []
     for i in (pbar:= tqdm(range(config["architecture"]["max_iter"]))):
@@ -179,6 +174,11 @@ def train_strong_form(l_model, device, n, size_layer, n_layers):
                     loss = loss + 100*loss_bdry
 
                 elif config["bc"] == "neumann":
+                    bdry_normal_model = MLP_normals(n=64, n_layers=5, in_dim=3, out_dim=3)
+                    bdry_normal_model.to(device=device)
+                    bdry_normal_model.load_state_dict(torch.load(f"../data/model_{config['surface']}_bdry_normal.pth", weights_only=True, map_location=device))
+                    bdry_normal_model.requires_grad_(True)
+                    
                     # Get boundary points
                     bdry_edges_rdm = boundary_edges[torch.randint(0, boundary_edges.shape[0], (n,), device=device)]
                     w = torch.rand((n, 1), device=device) # linear interpolation weights
