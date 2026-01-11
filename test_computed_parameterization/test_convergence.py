@@ -305,20 +305,44 @@ def plot():
     for iter in range(4):
         v_mesh_fem, f_mesh_fem = gpy.read_mesh(f"../data/{config['surface']}_{iter}.obj")
         print(f"FEM Mesh {iter}: {v_mesh_fem.shape[0]} vertices, {f_mesh_fem.shape[0]} faces")
-        lap_u_fem = rhs(torch.Tensor(v_mesh_fem).to(device=device)).detach().cpu().numpy()
-        lap_u_fem -= mean_f
+        if not have_bdry:
+            lap_u_fem = rhs_np(v_mesh_fem)
+            lap_u_fem -= mean_f
 
-        M_fem = gpy.massmatrix(v_mesh_fem, f_mesh_fem)
-        M_fem = -sp.sparse.csc_matrix(M_fem)
+            M_fem = gpy.massmatrix(v_mesh_fem, f_mesh_fem)
+            M_fem = -sp.sparse.csc_matrix(M_fem)
+            
+            L_fem = gpy.cotangent_laplacian(v_mesh_fem, f_mesh_fem)
 
-        BV_fem = gpy.boundary_vertices(f_mesh_fem)
+            u_fem = spsolve(L_fem, M_fem @ lap_u_fem)
+
+            const = np.mean(u_numpy(v_mesh_fem) - u_fem)
+            u_fem = u_fem + const
         
-        L_fem = gpy.cotangent_laplacian(v_mesh_fem, f_mesh_fem)
+        else:
+            lap_u_fem = rhs_np(v_mesh_fem)
 
-        u_fem = spsolve(L_fem, M_fem @ lap_u_fem)
+            M_mesh_fem = gpy.massmatrix(v_mesh_fem, f_mesh_fem)
+            M_mesh_fem = sp.sparse.csc_matrix(M_mesh_fem)
+            f_ = -M_mesh_fem @ lap_u_fem
 
-        const = np.mean(u_numpy(v_mesh_fem) - u_fem)
-        u_fem = u_fem + const
+            BV = gpy.boundary_vertices(f_mesh_fem)
+            
+            lap_mesh = gpy.cotangent_laplacian(v_mesh_fem, f_mesh_fem)
+
+            # Apply Dirichlet Boundary
+            # Section 4.3 - https://web.stanford.edu/class/energy281/FiniteElementMethod.pdf
+            if config["bc"] == "dirichlet":
+                for i in BV:
+                    lap_mesh[i, :] = 0
+                    lap_mesh[i, i] = 1
+                f_[BV] = u_numpy(v_mesh_fem[BV])
+
+            u_fem = sp.sparse.linalg.spsolve(lap_mesh, f_)
+
+            if config["bc"] == "neumann":
+                const = np.mean(u_numpy(v_mesh_fem) - u_fem)
+                u_fem = u_fem + const
         
         l2_loss = np.linalg.norm(u_numpy(v_mesh_fem) - u_fem, 2) / np.linalg.norm(u_numpy(v_mesh_fem), 2)
         print("FEM Loss:", l2_loss)
@@ -388,8 +412,6 @@ if __name__ == "__main__":
         area = M.sum()
         mean_f = np.ones_like(lap_u_) @ (M @ lap_u_) / area
         lap_u_ -= mean_f
-
-        BV = gpy.boundary_vertices(f_mesh)
 
         # Discrete surface Laplacian of u
         u_mesh = spsolve(L, -M @ lap_u_)   # equivalent to -M^{-1} L u
