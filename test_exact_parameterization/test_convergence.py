@@ -386,8 +386,11 @@ def get_normals(v, S_theta=None):
 
 def get_bdry_points(n, device):
     if config["surface"] == "heightfield":
-        # Since, the normals are discontinuous near the corners, we avoid sampling points too close to the corners
-        eps = 0.1
+        if config["bc"] == "neumann" and config["NN"] != "noNN":
+            # Since, the normals are discontinuous near the corners, we avoid sampling points too close to the corners
+            eps = 0.1
+        else:
+            eps = 0.0
         b = torch.tensor(np.random.uniform(config["domain"]["min"] + eps, config["domain"]["max"] - eps, (n))).to(device=device).requires_grad_(True).float()
         b1 = torch.stack([b, torch.ones_like(b)*config["domain"]["min"]], dim=1)
         b2 = torch.stack([b, torch.ones_like(b)*config["domain"]["max"]], dim=1)
