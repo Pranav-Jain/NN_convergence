@@ -437,7 +437,10 @@ if __name__ == "__main__":
     v_mesh_torch = torch.tensor(v_mesh, dtype=torch.float32, device=device).requires_grad_(True)
     u_mesh_torch = torch.tensor(u_mesh, dtype=torch.float32, device=device).requires_grad_(True)
         
-    save_dir = f"poisson_results/{config['surface']}/{config['bc']}/domain_{config['domain']['min']}to{config['domain']['max']}"
+    if not have_bdry:
+        save_dir = f"{config['pde']}_results/{config['surface']}"
+    else:
+        save_dir = f"{config['pde']}_results/{config['surface']}/{config['bc']}"
 
     if config["operation"] == "train":
         # If directory doesn't exist, create it
