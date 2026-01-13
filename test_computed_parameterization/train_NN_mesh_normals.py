@@ -80,9 +80,63 @@ def train_mesh(v_mesh, f_mesh, n_layers = 5, size_layer = 64, lr=1e-4, max_iter=
         
     return model
 
+def train_bdry_normal(v_mesh, f_mesh, boundary_edges, n_layers = 5, size_layer = 64, lr=1e-4, max_iter=5000000, n_samples=100, tol=1e-10):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+
+    bdry_model = MLP_normals(n=size_layer, n_layers=n_layers, in_dim=3, out_dim=3)
+    bdry_model.to(device=device)
+
+    optimizer = torch.optim.Adam(bdry_model.parameters(), lr=lr)
+
+    surf_normals = gpy.per_vertex_normals(v_mesh, f_mesh)
+    surf_normals_torch = torch.tensor(surf_normals, dtype=torch.float32, device=device)
+    boundary_edges = torch.tensor(boundary_edges, dtype=torch.long, device=device)
+    v_mesh_torch = torch.tensor(v_mesh, dtype=torch.float32, device=device)
+
+    edge_vec = v_mesh_torch[boundary_edges[:, 1]] - v_mesh_torch[boundary_edges[:, 0]]
+    edge_vec = edge_vec / torch.norm(edge_vec, p=2, dim=1, keepdim=True)
+
+    bdry_normal = torch.cross(surf_normals_torch[boundary_edges[:, 0]], edge_vec, dim=1)
+    bdry_normal = bdry_normal / torch.norm(bdry_normal, p=2, dim=1, keepdim=True)
+    
+    # Train the model
+    for i in (pbar:= tqdm(range(max_iter))):
+        try:
+            optimizer.zero_grad()
+
+            idx = torch.randint(0, boundary_edges.shape[0]-1, (n_samples,), device=device)
+            bdry_edges_rdm = boundary_edges[idx]
+            w = torch.rand((n_samples, 1), device=device) # linear interpolation weights
+            bdry_points = (1 - w) * v_mesh_torch[bdry_edges_rdm[:, 0]] + w * v_mesh_torch[bdry_edges_rdm[:, 1]]
+            bdry_normal_rdm = bdry_normal[idx]
+            bdry_normal_rdm = bdry_normal_rdm / torch.norm(bdry_normal_rdm, p=2, dim=1, keepdim=True)
+            
+            l = loss(bdry_model, bdry_points, bdry_normal_rdm)
+            l.backward()
+            optimizer.step()
+            
+            loss_value = l.item()
+            pbar.set_description(f"Loss: {loss_value}")
+
+            if loss_value < tol:
+                break
+        except KeyboardInterrupt:
+            print("Training interrupted by user.")
+            break
+        
+    return bdry_model
+
 if __name__ == "__main__":
     v_mesh, f_mesh = gpy.read_mesh(f"../data/{sys.argv[1]}.obj")
     model = train_mesh(v_mesh, f_mesh)
 
     # Save the model
     torch.save(model.state_dict(), f"../data/model_{sys.argv[1]}_normal.pth")
+
+    boundary_edges = gpy.boundary_edges(f_mesh)
+    if boundary_edges.shape[0] == 0:
+        print("No boundary edges found in the mesh.")
+        sys.exit(0)
+    model_bdry = train_bdry_normal(v_mesh, f_mesh, boundary_edges)
+    torch.save(model_bdry.state_dict(), f"../data/model_{sys.argv[1]}_bdry_normal.pth")
