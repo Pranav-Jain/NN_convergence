@@ -145,6 +145,9 @@ def train_strong_form(l_model, device, n, size_layer, n_layers):
             normals = get_normals(v_cart, surf_normal_model)
             laplacian_pred = get_surface_laplacian(l_model, v_cart, normals)
 
+            if config['pde'] == "helmholtz":
+                laplacian_pred = laplacian_pred + (config['k']**2 * l_model(v_cart).squeeze())
+
             if not have_bdry:
                 true_lap = rhs(v_cart)
                 # Enforce zero-mean RHS
@@ -330,6 +333,9 @@ def plot():
             
             lap_mesh = gpy.cotangent_laplacian(v_mesh_fem, f_mesh_fem)
 
+            if config['pde'] == "helmholtz":
+                lap_mesh = lap_mesh + (config['k']**2 * -M_mesh_fem)
+
             # Apply Dirichlet Boundary
             # Section 4.3 - https://web.stanford.edu/class/energy281/FiniteElementMethod.pdf
             if config["bc"] == "dirichlet":
@@ -428,7 +434,15 @@ if __name__ == "__main__":
         u_mesh = eigvecs[:,int(sys.argv[1])] # eigenfunction
         lam = eigvals[int(sys.argv[1])]
 
-        rhs_mesh = -lam * u_mesh
+        if config['pde'] == "poisson":
+            rhs_mesh = -lam * u_mesh
+        elif config['pde'] == "helmholtz":
+            if np.abs(lam + config['k']**2) < 1e-3:
+                print("Eigenvalue too small for Helmholtz PDE")
+                exit()
+            rhs_mesh = (-lam + config['k']**2) * u_mesh
+        else:
+            raise ValueError("Unsupported PDE type")
 
     else:
         print("Multiple boundary loops not supported")
@@ -437,10 +451,7 @@ if __name__ == "__main__":
     v_mesh_torch = torch.tensor(v_mesh, dtype=torch.float32, device=device).requires_grad_(True)
     u_mesh_torch = torch.tensor(u_mesh, dtype=torch.float32, device=device).requires_grad_(True)
         
-    if not have_bdry:
-        save_dir = f"{config['pde']}_results/{config['surface']}"
-    else:
-        save_dir = f"{config['pde']}_results/{config['surface']}/{config['bc']}"
+    save_dir = f"{config['pde']}_results/{config['surface']}/{config['bc']}"
 
     if config["operation"] == "train":
         # If directory doesn't exist, create it

@@ -31,7 +31,7 @@ def main():
     elif sys.argv[1] == "test_exact_parameterization" or sys.argv[1] == "test_exact_parameterization/":
         save_dir = f"test_exact_parameterization/poisson_results/{config['surface']}/{config['NN']}/{config['bc']}/domain_{config['domain']['min']}to{config['domain']['max']}"
     elif sys.argv[1] == "test_computed_parameterization" or sys.argv[1] == "test_computed_parameterization/":
-        save_dir = f"test_computed_parameterization/poisson_results/{config['surface']}/{config['bc']}/domain_{config['domain']['min']}to{config['domain']['max']}"
+        save_dir = f"test_computed_parameterization/poisson_results/{config['surface']}/{config['bc']}"
 
     examples = glob.glob(os.path.join(save_dir, "example*"))
     print(f"Found {len(examples)} examples in {save_dir}")
