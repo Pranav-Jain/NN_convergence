@@ -1,0 +1,38 @@
+{
+    "individual_results": [
+        {
+            "example": "example1",
+            "slope": -1.0570228652197897,
+            "correlation": -0.9808326690977783,
+            "converged": 1
+        },
+        {
+            "example": "example2",
+            "slope": -0.7144110954160847,
+            "correlation": -0.8576427461687146,
+            "converged": 1
+        },
+        {
+            "example": "example3",
+            "slope": -0.700574812093211,
+            "correlation": -0.8930734151966873,
+            "converged": 1
+        },
+        {
+            "example": "example4",
+            "slope": -0.7234531312250967,
+            "correlation": -0.9589353291725167,
+            "converged": 1
+        },
+        {
+            "example": "example5",
+            "slope": -1.0840183685376574,
+            "correlation": -0.9712295058743409,
+            "converged": 1
+        }
+    ],
+    "num_converged": 5,
+    "total_examples": 5,
+    "fraction_converged": 1.0,
+    "overall_converged": 1
+}
