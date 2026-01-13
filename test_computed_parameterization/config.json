@@ -1,6 +1,7 @@
 {
-    "pde": "poisson",
-    "surface": "bunny",
+    "pde": "helmholtz",
+    "k": 2.0,
+    "surface": "hand",
     "bc": "dirichlet",
     "operation": "plot",
     "threshold": 0.0,
