@@ -17,7 +17,7 @@ Our experiments can be summarised in the following table:
 | 5. | MLP learns normals<br> on arbitrary mesh | [10/10](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_computed_parameterization/poisson_results/hand/dirichlet/convergence_summary.json) | [10/10](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_computed_parameterization/poisson_results/hand/neumann/convergence_summary.json) | [10/10](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_computed_parameterization/poisson_results/bunny/dirichlet/convergence_summary.json), [9/10](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_computed_parameterization/poisson_results/spot/dirichlet/convergence_summary.json) |
 ||||||
 |  | _<ins>Helmholtz equation</ins>_ | _Dirichlet_ | _Neumann_ |  |
-| 6. | MLP learns normals<br> on arbitrary mesh | [5/5](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_computed_parameterization/helmholtz_results/hand/dirichlet/convergence_summary.json) | | |
+| 6. | MLP learns normals<br> on arbitrary mesh | [5/5](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_computed_parameterization/helmholtz_results/hand/dirichlet/convergence_summary.json) | [5/5](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_computed_parameterization/helmholtz_results/hand/neumann/convergence_summary.json) | |
 
 1. The first experiment is to solve the Poisson equation directly on a plane with Dirichlet and Neumann boundary and on the surface of the sphere
 2. The second experiment is to solve on the heightfield (2d plane as parameter domain) and ellipsoid (sphere as parameter domain) with exact normals
