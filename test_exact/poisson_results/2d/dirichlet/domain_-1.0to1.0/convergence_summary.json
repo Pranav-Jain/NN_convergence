@@ -2,62 +2,62 @@
     "individual_results": [
         {
             "example": "example1",
-            "slope": -0.9934013813595568,
-            "correlation": -0.9915696978563519,
+            "slope": -0.9809178822344291,
+            "correlation": -0.9912498832886392,
             "converged": 1
         },
         {
             "example": "example2",
-            "slope": -0.9151190349538078,
-            "correlation": -0.9625314745111687,
+            "slope": -0.8991995434528879,
+            "correlation": -0.9612544036061543,
             "converged": 1
         },
         {
             "example": "example3",
-            "slope": -0.8568815699996736,
-            "correlation": -0.9854293882324642,
+            "slope": -0.8415806839437653,
+            "correlation": -0.9846981491380853,
             "converged": 1
         },
         {
             "example": "example4",
-            "slope": -0.9471727629026844,
-            "correlation": -0.9632827001081569,
+            "slope": -0.9355114627448584,
+            "correlation": -0.9611738680544997,
             "converged": 1
         },
         {
             "example": "example5",
-            "slope": -0.46713193515796086,
-            "correlation": -0.9365496317652623,
+            "slope": -0.4573066928644149,
+            "correlation": -0.9287180909797381,
             "converged": 1
         },
         {
             "example": "example6",
-            "slope": -0.7453310374633885,
-            "correlation": -0.9785749154351637,
+            "slope": -0.746663105502653,
+            "correlation": -0.9790681089369487,
             "converged": 1
         },
         {
             "example": "example7",
-            "slope": -0.9296017113939543,
-            "correlation": -0.9369298248536037,
+            "slope": -0.920506949114315,
+            "correlation": -0.9345711455725495,
             "converged": 1
         },
         {
             "example": "example8",
-            "slope": -0.7159402795436176,
-            "correlation": -0.7541789441018905,
+            "slope": -0.7043465635332574,
+            "correlation": -0.7535939690900378,
             "converged": 1
         },
         {
             "example": "example9",
-            "slope": -0.8198521042634926,
-            "correlation": -0.9696920062705752,
+            "slope": -0.7946194679403948,
+            "correlation": -0.9712496956217884,
             "converged": 1
         },
         {
             "example": "example10",
-            "slope": -0.5925699823939425,
-            "correlation": -0.9796962132560824,
+            "slope": -0.5882609586474079,
+            "correlation": -0.9782691914649433,
             "converged": 1
         }
     ],

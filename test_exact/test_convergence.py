@@ -13,7 +13,7 @@ import polyscope as ps
 import pandas as pd
 
 sys.path.append('../src')
-from siren import MLP
+from siren import MLP, MLP_tanh, MLP_sigmoid
 from surface_laplacian import get_surface_laplacian
 
 with open("config.json", "r") as f:
@@ -275,7 +275,7 @@ def phi(x, eps=0.01):
 
     return phi
 
-def test_FEM(nx, ny, return_memory=False):
+def test_FEM(nx, ny):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     l2_loss = 0.0
 
@@ -298,7 +298,17 @@ def test_FEM(nx, ny, return_memory=False):
             lap_u[BV] = u_numpy(V[BV])
 
         u = sp.sparse.linalg.spsolve(L, lap_u)
+
+        if config["bc"] == "neumann" or config["dimension"] == 3:
+            # Add the constant
+            const = np.mean(u_numpy(V) - u)
+            u += const
+
         l2_loss = relative_l2_loss(u, u_numpy(V))
+
+        np.save(f"{save_dir}/example{sys.argv[1]}/npy_files/pred_fem_{nx}_{ny}.npy", u)
+        np.save(f"{save_dir}/example{sys.argv[1]}/npy_files/error_fem_{nx}_{ny}.npy", np.abs(u - u_numpy(V)))
+
 
     print(f"FEM Loss: {l2_loss}")
 
@@ -560,7 +570,9 @@ def plot():
     ref_dof = []
 
     if config["dimension"] == 2:
-        x = torch.tensor(np.random.uniform(config["domain"]["min"], config["domain"]["max"], (100000, 2))).to(device=device).requires_grad_(True).float()
+        # x = torch.tensor(np.random.uniform(config["domain"]["min"], config["domain"]["max"], (100000, 2))).to(device=device).requires_grad_(True).float()
+        v_mesh, _ = gpy.read_mesh("../data/2d.obj")
+        x = torch.tensor(v_mesh[:, :2], dtype=torch.float32).to(device=device).requires_grad_(True)
         true = u_torch(x).detach().cpu().numpy()
     elif config["dimension"] == 3:
         r = 1.0
@@ -570,6 +582,10 @@ def plot():
         x_sp = get_spherical_coordinates_torch(x, center, r)
         true = u_torch(x_sp).detach().cpu().numpy()
 
+    min_pred = []
+    max_pred = []
+    min_err = []
+    max_err = []
     for file in filenames:
         # get layer size and n_layers from filename
         n_layers = int(file.split("_")[-1][:-4])
@@ -581,9 +597,9 @@ def plot():
 
         pred = model(x).squeeze().detach().cpu().numpy()
 
-        # # Adjust the constant factor
-        # const = np.mean(true - pred)
-        # pred = pred + const
+        # Adjust the constant factor
+        const = np.mean(true - pred)
+        pred = pred + const
 
         loss_l2 = relative_l2_loss(pred, true)
 
@@ -595,24 +611,27 @@ def plot():
         print("Depth and Width:", n_layers, size_layer)
         print("PINN Loss:", loss_l2)
 
-        # Plot the error plots using polyscope
-        # ps.init()
-        # ps.set_screenshot_extension(".png")
-        # ps.register_point_cloud("Surface Points", x.detach().cpu().numpy())
-        # ps.get_point_cloud("Surface Points").add_scalar_quantity("True Solution", true, enabled=True)
-        # ps.screenshot(f"{save_dir}/example{sys.argv[1]}/true_{size_layer}_{n_layers}.png")
+        # output numpy array of true, pred and error. Required for blender rendering
+        if not os.path.exists(f"{save_dir}/example{sys.argv[1]}/npy_files/"):
+            os.makedirs(f"{save_dir}/example{sys.argv[1]}/npy_files/")
+        np.save(f"{save_dir}/example{sys.argv[1]}/npy_files/true_{size_layer}_{n_layers}.npy", true)
+        np.save(f"{save_dir}/example{sys.argv[1]}/npy_files/pred_{size_layer}_{n_layers}.npy", pred)
+        np.save(f"{save_dir}/example{sys.argv[1]}/npy_files/error_{size_layer}_{n_layers}.npy", np.abs(true - pred))
 
-        # ps.get_point_cloud("Surface Points").add_scalar_quantity("Predicted Solution", pred, enabled=True)
-        # ps.screenshot(f"{save_dir}/example{sys.argv[1]}/pred_{size_layer}_{n_layers}.png")
-
-        # ps.get_point_cloud("Surface Points").add_scalar_quantity("Error", np.abs(true - pred), enabled=True)
-        # ps.screenshot(f"{save_dir}/example{sys.argv[1]}/error_{size_layer}_{n_layers}.png")
+        # Output min/max pred and error across all models for color mapping in blender
+        min_pred.append(pred.min())
+        max_pred.append(pred.max())
+        min_err.append(np.abs(true - pred).min())
+        max_err.append(np.abs(true - pred).max())
 
         # FEM for 2D case
         if config["dimension"] == 2:
             fem_loss = test_FEM(int(np.sqrt(total_trainable_params)), int(np.sqrt(total_trainable_params)))
             fem_losses.append(fem_loss)
             fem_dof.append(total_trainable_params)
+
+    np.save(f"{save_dir}/example{sys.argv[1]}/npy_files/min_max_pred.npy", np.array([max(min_pred), min(max_pred)]))
+    np.save(f"{save_dir}/example{sys.argv[1]}/npy_files/min_max_err.npy", np.array([max(min_err), min(max_err)]))
     
     # FEM for 3D case
     if config["dimension"] == 3:
@@ -645,9 +664,14 @@ def plot():
 
     # Sort the arrays
     dof_sorted = np.sort(dof)
+    print(dof_sorted)
     losses_sorted = losses[np.argsort(dof)]
     fem_dof_sorted = np.sort(fem_dof)
     fem_losses_sorted = fem_losses[np.argsort(fem_dof)]
+
+    # Save losses with DOF
+    np.savetxt(f"{save_dir}/example{sys.argv[1]}/pinn_convergence.txt", np.vstack((dof_sorted, losses_sorted)).T, header="DOF Relative_L2_Loss")
+    np.savetxt(f"{save_dir}/example{sys.argv[1]}/fem_convergence.txt", np.vstack((fem_dof_sorted, fem_losses_sorted)).T, header="DOF Relative_L2_Loss")
 
     x = dof_sorted
     y = losses_sorted
@@ -657,21 +681,23 @@ def plot():
 
     
     # Create DataFrame for this run
-    example_name = f"example{sys.argv[1]}"
+    try:
+        example_name = f"example{sys.argv[1]}"
 
-    output_path = f"{save_dir}/output.csv"
-    data = pd.DataFrame({
-        "dof": dof_sorted,
-        example_name: losses_sorted
-    })
-    if sys.argv[1] == "1":
-        data.to_csv(output_path, index=False)
-    else:
-        existing = pd.read_csv(output_path)
-        merged = pd.merge(existing, data, on="dof", how="outer")
-        merged = merged.sort_values(by="dof")
-        merged.to_csv(output_path, index=False)
-
+        output_path = f"{save_dir}/output.csv"
+        data = pd.DataFrame({
+            "dof": dof_sorted,
+            example_name: losses_sorted
+        })
+        if sys.argv[1] == "1":
+            data.to_csv(output_path, index=False)
+        else:
+            existing = pd.read_csv(output_path)
+            merged = pd.merge(existing, data, on="dof", how="outer")
+            merged = merged.sort_values(by="dof")
+            merged.to_csv(output_path, index=False)
+    except:
+        print("Error saving CSV")
 
     # Plotting the convergence plot
     plt.figure()
