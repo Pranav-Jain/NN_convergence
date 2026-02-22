@@ -138,6 +138,47 @@ python3 check_convergence.py [test_exact|test_exact_parameterization|test_comput
 ```
 __Note__: Make sure that the operation in the config file for the directory you are running for is set to _"plot"_ before running the above command.
 
+## Reproducing Paper Scripts and Figures
+All paper figure pipelines are in [scripts/figure_scripts](https://github.com/Pranav-Jain/NN_convergence/tree/main/scripts/figure_scripts).
+
+1. Activate the environment:
+```sh
+conda activate test_convergence
+```
+
+2. (Optional) If you cloned fresh, make scripts executable:
+```sh
+chmod +x scripts/figure_scripts/run_*.sh
+```
+
+3. Generate all paper scripts/figures:
+```sh
+for f in scripts/figure_scripts/run_*.sh; do
+    echo "Running $f"
+    bash "$f"
+done
+```
+
+4. Generated outputs are written to:
+     - `scripts/images` (rendered figure images)
+     - `scripts/plots` (convergence and comparison plots)
+
+5. To run one figure pipeline only (example):
+```sh
+bash scripts/figure_scripts/run_moai.sh
+```
+
+6. To regenerate convergence summaries after plotting:
+```sh
+python3 check_convergence.py test_exact
+python3 check_convergence.py test_exact_parameterization
+python3 check_convergence.py test_computed_parameterization
+```
+
+__Notes__:
+- Training can be expensive; several figure scripts use `--render-only` and assume pretrained outputs already exist in `test_*/*_results`.
+- The main orchestrator used by the figure scripts is `scripts/run_mesh_pipeline.py`.
+
 ## Training MLP to learn the normals
 The scripts [train_hf_normal.py](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/train_hf_normal.py) and [train_ellipsoid_normal.py](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/train_ellipsoid_normal.py) can be used to train an MLP that given a point on the domain returns the unit normal at that point.
 Use the following command to run the script
