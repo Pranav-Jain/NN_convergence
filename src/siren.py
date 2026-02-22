@@ -75,3 +75,49 @@ class MLP_normals(nn.Module):
         output = output / torch.linalg.norm(output, dim=1, ord=2, keepdim=True) # Normalize to unit length
 
         return output.squeeze()
+
+class MLP_tanh(nn.Module):
+    def __init__(self, n=512, n_layers=3, in_dim=3, out_dim=1):
+        super().__init__()
+        layers = []
+
+        layers.append(nn.Linear(in_dim, n))
+        layers.append(nn.Tanh())
+
+        for _ in range(n_layers):
+            layers.append(nn.Linear(n, n))
+            layers.append(nn.Tanh())
+
+        self.trunk = nn.Sequential(*layers)
+        self.final_layer = nn.Linear(n, out_dim, bias=True)
+        nn.init.xavier_uniform_(self.final_layer.weight)
+        nn.init.zeros_(self.final_layer.bias)
+
+    def forward(self, x):
+        features = self.trunk(x)
+        output = self.final_layer(features)
+
+        return output.squeeze()
+    
+class MLP_sigmoid(nn.Module):
+    def __init__(self, n=512, n_layers=3, in_dim=3, out_dim=1):
+        super().__init__()
+        layers = []
+
+        layers.append(nn.Linear(in_dim, n))
+        layers.append(nn.Sigmoid())
+
+        for _ in range(n_layers):
+            layers.append(nn.Linear(n, n))
+            layers.append(nn.Sigmoid())
+            
+        self.trunk = nn.Sequential(*layers)
+        self.final_layer = nn.Linear(n, out_dim, bias=True)
+        nn.init.xavier_uniform_(self.final_layer.weight)
+        nn.init.zeros_(self.final_layer.bias)
+
+    def forward(self, x):
+        features = self.trunk(x)
+        output = self.final_layer(features)
+
+        return output.squeeze()
