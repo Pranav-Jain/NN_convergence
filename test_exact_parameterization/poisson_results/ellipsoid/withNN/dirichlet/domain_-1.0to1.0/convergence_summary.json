@@ -2,74 +2,74 @@
     "individual_results": [
         {
             "example": "example1",
-            "slope": -1.0710573447311849,
-            "correlation": -0.47835797199463126,
+            "slope": -0.6713234824092875,
+            "correlation": -0.3813899446109129,
             "converged": 0
         },
         {
             "example": "example2",
-            "slope": -2.027107458389436,
-            "correlation": -0.7680923185938339,
+            "slope": -1.694807922907186,
+            "correlation": -0.7488991836804012,
             "converged": 1
         },
         {
             "example": "example3",
-            "slope": -1.2801997490119916,
-            "correlation": -0.6469865765696065,
+            "slope": -0.7399192558059059,
+            "correlation": -0.5780722431162235,
             "converged": 1
         },
         {
             "example": "example4",
-            "slope": -0.11633978983750083,
-            "correlation": -0.19655518510716594,
+            "slope": 0.14475698985092975,
+            "correlation": 0.39157154278387346,
             "converged": 0
         },
         {
             "example": "example5",
-            "slope": -2.137118611567824,
-            "correlation": -0.6863210054612275,
+            "slope": -1.6871686811273596,
+            "correlation": -0.7251989141753133,
             "converged": 1
         },
         {
             "example": "example6",
-            "slope": -1.6947370415385021,
-            "correlation": -0.8961668819493243,
+            "slope": -1.0164587094700999,
+            "correlation": -0.8220213285930059,
             "converged": 1
         },
         {
             "example": "example7",
-            "slope": -2.7333402511177436,
-            "correlation": -0.829332256959755,
+            "slope": -2.2536007687447723,
+            "correlation": -0.8747975240685907,
             "converged": 1
         },
         {
             "example": "example8",
-            "slope": -2.6368708082083474,
-            "correlation": -0.8922745954408092,
+            "slope": -2.347361699464601,
+            "correlation": -0.9186370215714595,
             "converged": 1
         },
         {
             "example": "example9",
-            "slope": -2.8761822629051457,
-            "correlation": -0.7544944431103129,
+            "slope": -2.455085904629203,
+            "correlation": -0.740109273805743,
             "converged": 1
         },
         {
             "example": "example10",
-            "slope": 0.2236165653141037,
-            "correlation": 0.40055536667223507,
+            "slope": 0.09513549839280717,
+            "correlation": 0.36620842740744564,
             "converged": 0
         },
         {
             "example": "example11",
-            "slope": -0.5655587900506892,
-            "correlation": -0.7817589324454478,
+            "slope": -0.6025510980830735,
+            "correlation": -0.790369250990182,
             "converged": 1
         },
         {
             "example": "example12",
-            "slope": -0.026895956952546925,
-            "correlation": -0.5822254128405003,
+            "slope": -0.024738747686955158,
+            "correlation": -0.5421797925377011,
             "converged": 0
         }
     ],

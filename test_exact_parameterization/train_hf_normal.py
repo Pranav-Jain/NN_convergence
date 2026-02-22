@@ -84,7 +84,7 @@ def loss(model, v, true_n=None):
     return l
 
 # Train using exact normals
-def train_exact(n_layers = 5, size_layer = 64, lr=1e-4, max_iter=100000, n_samples=10000, tol=1e-8):
+def train_exact(n_layers = 5, size_layer = 64, lr=1e-4, max_iter=1000000, n_samples=10000, tol=1e-8):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
@@ -111,7 +111,7 @@ def train_exact(n_layers = 5, size_layer = 64, lr=1e-4, max_iter=100000, n_sampl
     return model
 
 # Train using mesh normals
-def train_mesh(v_mesh, f_mesh, v_emb, f_emb, n_layers = 5, size_layer = 64, lr=1e-4, max_iter=100000, n_samples=10000, tol=1e-8):
+def train_mesh(v_mesh, f_mesh, v_emb, f_emb, n_layers = 5, size_layer = 64, lr=1e-4, max_iter=1000000, n_samples=10000, tol=1e-8):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 

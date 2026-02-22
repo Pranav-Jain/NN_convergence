@@ -575,8 +575,18 @@ def plot():
     dof = []
     losses = []
 
-    V = sample_in_domain(100000)
+    # V = sample_in_domain(100000)
+    if config["surface"] == "heightfield":
+        v_mesh, f_mesh = gpy.read_mesh("../data/heightfield.obj")
+        V = v_mesh
+    elif config["surface"] == "ellipsoid":
+        v_mesh, f_mesh = gpy.read_mesh("../data/ellipsoid.obj")
+        V = v_mesh
 
+    min_pred = []
+    max_pred = []
+    min_err = []
+    max_err = []
     for file in filenames:
         print(file)
         n_layers = int(file.split("_")[-2])
@@ -600,19 +610,22 @@ def plot():
 
         total_trainable_params = int(sum(p.numel() for p in model.parameters() if p.requires_grad))
         dof.append(total_trainable_params)
+        
+        # output numpy array of true, pred and error. Required for blender rendering
+        if not os.path.exists(f"{save_dir}/example{sys.argv[1]}/npy_files/"):
+            os.makedirs(f"{save_dir}/example{sys.argv[1]}/npy_files/")
+        np.save(f"{save_dir}/example{sys.argv[1]}/npy_files/true_{size_layer}_{n_layers}.npy", true)
+        np.save(f"{save_dir}/example{sys.argv[1]}/npy_files/pred_{size_layer}_{n_layers}.npy", pred)
+        np.save(f"{save_dir}/example{sys.argv[1]}/npy_files/error_{size_layer}_{n_layers}.npy", np.abs(true - pred))
 
-        # Plot the error plots using polyscope
-        ps.init()
-        ps.set_screenshot_extension(".png")
-        ps.register_point_cloud("Surface Points", V)
-        ps.get_point_cloud("Surface Points").add_scalar_quantity("True Solution", true, enabled=True)
-        ps.screenshot(f"{save_dir}/example{sys.argv[1]}/true_{size_layer}_{n_layers}.png")
-
-        ps.get_point_cloud("Surface Points").add_scalar_quantity("Predicted Solution", pred, enabled=True)
-        ps.screenshot(f"{save_dir}/example{sys.argv[1]}/pred_{size_layer}_{n_layers}.png")
-
-        ps.get_point_cloud("Surface Points").add_scalar_quantity("Error", np.abs(true - pred), enabled=True)
-        ps.screenshot(f"{save_dir}/example{sys.argv[1]}/error_{size_layer}_{n_layers}.png")
+        # Output min/max pred and error across all models for color mapping in blender
+        min_pred.append(true.min())
+        max_pred.append(true.max())
+        min_err.append(np.abs(true - pred).min())
+        max_err.append(np.abs(true - pred).max())
+    
+    np.save(f"{save_dir}/example{sys.argv[1]}/npy_files/min_max_pred.npy", np.array([max(min_pred), min(max_pred)]))
+    np.save(f"{save_dir}/example{sys.argv[1]}/npy_files/min_max_err.npy", np.array([max(min_err), min(max_err)]))
 
     fem_loss = []
     fem_dof = []
@@ -663,19 +676,22 @@ def plot():
     fem_loss_sorted = fem_loss[np.argsort(fem_dof_sorted)]
 
     # Create DataFrame for this run
-    example_name = f"example{sys.argv[1]}"
-    output_path = f"{save_dir}/output.csv"
-    data = pd.DataFrame({
-        "dof": dof_sorted,
-        example_name: losses_sorted
-    })
-    if sys.argv[1] == "1":
-        data.to_csv(output_path, index=False)
-    else:
-        existing = pd.read_csv(output_path)
-        merged = pd.merge(existing, data, on="dof", how="outer")
-        merged = merged.sort_values(by="dof")
-        merged.to_csv(output_path, index=False)
+    try:
+        example_name = f"example{sys.argv[1]}"
+        output_path = f"{save_dir}/output.csv"
+        data = pd.DataFrame({
+            "dof": dof_sorted,
+            example_name: losses_sorted
+        })
+        if sys.argv[1] == "1":
+            data.to_csv(output_path, index=False)
+        else:
+            existing = pd.read_csv(output_path)
+            merged = pd.merge(existing, data, on="dof", how="outer")
+            merged = merged.sort_values(by="dof")
+            merged.to_csv(output_path, index=False)
+    except:
+        print("Error saving CSV")
 
     x = dof_sorted
     y = losses_sorted
@@ -683,15 +699,20 @@ def plot():
     # fit a line to the data
     coeffs = np.polyfit(np.log(x), np.log(y), 1)
 
-    plt.loglog(x, y, label="PINN", marker='o')
-    plt.loglog(x, 1/x, label="1/x", color="red", linestyle='--')
-    plt.loglog(x, (1/x)**2, label="1/x^2", color="green", linestyle='--')
-    plt.loglog(fem_dof_sorted, fem_loss_sorted, label="FEM", marker='o')
+    plt.loglog(x, y, label="PINN", marker='o', linewidth=2)
+    plt.loglog(fem_dof, fem_loss, label="FEM", marker='o', linewidth=2)
+    plt.loglog(x, 0.9*x[0]*y[0]*1/x, color='red', label="1/x", linestyle='--')
 
     plt.xlabel("Total Trainable Parameters")
-    plt.ylabel("Relative L2 loss")
-    plt.title(f"Slope: {coeffs[0]}")
-    plt.legend()
+    plt.gca().set_facecolor('#f0f0f0')  # set gray bg color
+    plt.grid(color='white', linestyle='-', linewidth=1.5)
+    
+    # plt.ylabel("Relative L2 loss")
+    plt.title(f"Slope: {coeffs[0]:.2f}")
+    x_ = [x[0],x[len(x)//2], x[-1]]
+    y_ = [y[0],y[len(y)//2], y[-1]]
+    plt.xticks(ticks=x_, labels=['{:.1e}'.format(i) for i in x_], fontsize=10)
+    plt.yticks(ticks=y_, labels=['{:.1e}'.format(i) for i in y_], fontsize=10)
     plt.savefig(f"{save_dir}/convergence_example_{sys.argv[1]}.png")
 
 if __name__ == "__main__":
