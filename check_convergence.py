@@ -3,6 +3,7 @@ import sys
 import numpy as np
 import subprocess
 import json
+import re
 from scipy.stats import linregress
 import pandas as pd
 import glob
@@ -33,7 +34,11 @@ def main():
     elif sys.argv[1] == "test_computed_parameterization" or sys.argv[1] == "test_computed_parameterization/":
         save_dir = f"test_computed_parameterization/{config['pde']}_results/{config['surface']}/{config['bc']}"
 
-    examples = glob.glob(os.path.join(save_dir, "example*"))
+    examples = [
+        path
+        for path in glob.glob(os.path.join(save_dir, "example*"))
+        if re.fullmatch(r"example\d+", os.path.basename(path))
+    ]
     print(f"Found {len(examples)} examples in {save_dir}")
     results = []
 
