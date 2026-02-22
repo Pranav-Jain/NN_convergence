@@ -1,0 +1,17 @@
+{
+    "pde": "poisson",
+    "k": -100.0,
+    "surface": "cylinder",
+    "bc": "dirichlet",
+    "operation": "train",
+    "threshold": 0.0,
+    "architecture": {
+        "lr": 0.001,
+        "num_layers": 3,
+        "grad_clip": 10.0,
+        "scheduler_patience": 1000,
+        "num_samples": 10000,
+        "max_iter": 150000
+    },
+    "experiment": "minimal_surface"
+}

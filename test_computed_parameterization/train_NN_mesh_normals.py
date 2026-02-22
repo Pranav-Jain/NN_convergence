@@ -35,11 +35,12 @@ def loss(model, v, true_n):
 
     return loss
 
-def train_mesh(v_mesh, f_mesh, n_layers = 5, size_layer = 64, lr=1e-4, max_iter=5000000, n_samples=1000, tol=1e-10):
+def train_mesh(v_mesh, f_mesh, n_layers = 5, size_layer = 64, lr=1e-4, max_iter=100000000, n_samples=10000, tol=1e-5):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
     model = MLP_normals(n=size_layer, n_layers=n_layers, in_dim=3, out_dim=3)
+    model.load_state_dict(torch.load(f"../data/model_{sys.argv[1]}_normal.pth", map_location=device))
     model.to(device=device)
 
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -67,6 +68,7 @@ def train_mesh(v_mesh, f_mesh, n_layers = 5, size_layer = 64, lr=1e-4, max_iter=
             l = loss(model, v_mesh_rnd, normals_rnd)
 
             l.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 10.0)  # Gradient clipping
             optimizer.step()
             
             loss_value = l.item()
@@ -80,7 +82,7 @@ def train_mesh(v_mesh, f_mesh, n_layers = 5, size_layer = 64, lr=1e-4, max_iter=
         
     return model
 
-def train_bdry_normal(v_mesh, f_mesh, boundary_edges, n_layers = 5, size_layer = 64, lr=1e-4, max_iter=5000000, n_samples=100, tol=1e-10):
+def train_bdry_normal(v_mesh, f_mesh, boundary_edges, n_layers = 3, size_layer = 64, lr=1e-4, max_iter=10000000, n_samples=10000, tol=1e-4):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
@@ -114,6 +116,7 @@ def train_bdry_normal(v_mesh, f_mesh, boundary_edges, n_layers = 5, size_layer =
             
             l = loss(bdry_model, bdry_points, bdry_normal_rdm)
             l.backward()
+            torch.nn.utils.clip_grad_norm_(bdry_model.parameters(), 10.0)  # Gradient clipping
             optimizer.step()
             
             loss_value = l.item()
