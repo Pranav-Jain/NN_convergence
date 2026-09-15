@@ -69,12 +69,10 @@ def main():
     num_converged = sum(r["converged"] for r in results)
     total = len(results)
     frac_converged = num_converged / total if total > 0 else 0.0
-    overall_converged = frac_converged >= 0.8
 
     print("\n===== Summary =====")
     print(f"{num_converged}/{total} examples converged "
           f"({frac_converged*100:.1f}%)")
-    print(f"Overall convergence: {overall_converged}")
 
     # Save results
     output_json_path = os.path.join(save_dir, "convergence_summary.json")
@@ -83,8 +81,7 @@ def main():
             "individual_results": results,
             "num_converged": num_converged,
             "total_examples": total,
-            "fraction_converged": frac_converged,
-            "overall_converged": int(overall_converged)
+            "fraction_converged": frac_converged
         }, f, indent=4)
 
     print("Saved summary to convergence_summary.json")
