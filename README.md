@@ -1,87 +1,377 @@
-# Testing autodiff for solving the PDEs
-The code in this repository is used to test the autodiff package for solving the PDEs on arbitrary surfaces. We use an MLP to approximate the function $u$, and the loss function depends on the PDE. For example, for Poisson equation, $E=\|\Delta u_{MLP} - f\|^2$.
+# PINNsur: Physics-Informed Neural Networks for PDEs on Curved Surfaces
 
-The experiments are set up to check if one observes a convergence pattern as the number of degrees of freedom (tunable weights of the MLP) is increased.
+Official implementation and experimental code for:
 
-## Experiments
-We primarily built different classes of experiments, with each one being a little more involved than the previous one, to check where autodiff might fail. 
-Our experiments can be summarised in the following table:
-| S. No. | Parameter Domain<br> \ <br> Experiment | 2D Plane | 2D Plane | Sphere |
-| ---- | ---- | ----- | ----- | ----- |
-| | _<ins>Poisson equation</ins>_ | _Dirichlet_ | _Neumann_ |  |
-| 1. | On the parameter domain | [10/10](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact/poisson_results/2d/dirichlet/domain_-1.0to1.0/convergence_summary.json) | [9/10](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact/poisson_results/2d/neumann/domain_-1.0to1.0/convergence_summary.json) | [4/4](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact/poisson_results/3d/dirichlet/domain_-1.0to1.0/convergence_summary.json) |
-| 2. | Using exact normals | [10/10](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/poisson_results/heightfield/noNN/dirichlet/domain_-1.0to1.0/convergence_summary.json) | [6/10](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/poisson_results/heightfield/noNN/neumann/domain_-1.0to1.0/convergence_summary.json) | [8/12](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/poisson_results/ellipsoid/noNN/dirichlet/domain_-1.0to1.0/convergence_summary.json) |
-| 3. | MLP learns exact normals  | [10/10](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/poisson_results/heightfield/withNN/dirichlet/domain_-1.0to1.0/convergence_summary.json) | [7/10](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/poisson_results/heightfield/withNN/neumann/domain_-1.0to1.0/convergence_summary.json) | [8/12](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/poisson_results/ellipsoid/withNN/dirichlet/domain_-1.0to1.0/convergence_summary.json) |
-| 4. | MLP learns mesh normals | [8/10](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/poisson_results/heightfield/withNN_mesh/dirichlet/domain_-1.0to1.0/convergence_summary.json) | [6/10](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/poisson_results/heightfield/withNN_mesh/neumann/domain_-1.0to1.0/convergence_summary.json) | [9/12](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/poisson_results/ellipsoid/withNN_mesh/dirichlet/domain_-1.0to1.0/convergence_summary.json) |
-| |  | __hand__ | __hand__ | __bunny , spot__ |
-| 5. | MLP learns normals<br> on arbitrary mesh | [10/10](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_computed_parameterization/poisson_results/hand/dirichlet/convergence_summary.json) | [10/10](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_computed_parameterization/poisson_results/hand/neumann/convergence_summary.json) | [10/10](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_computed_parameterization/poisson_results/bunny/dirichlet/convergence_summary.json), [9/10](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_computed_parameterization/poisson_results/spot/dirichlet/convergence_summary.json) |
+> **PINNsur: Physics-Informed Neural Networks for PDEs on Curved Surfaces**
 
-1. The first experiment is to solve the Poisson equation directly on a plane with Dirichlet and Neumann boundary and on the surface of the sphere
-2. The second experiment is to solve on the heightfield (2d plane as parameter domain) and ellipsoid (sphere as parameter domain) with exact normals
-3. Same as the second experiment, but instead, an MLP is used to learn the exact normals
-4. Same as the third experiment, but instead, an MLP is used to learn the mesh normals
-5. Same as the fourth experiment, but instead, an MLP is used to learn the mesh normals of an arbitrary mesh
+PINNsur is a framework for solving partial differential equations (PDEs) on curved surfaces using physics-informed neural networks (PINNs). The method represents the PDE solution using a coordinate-based neural network and constructs surface differential operators by projecting Euclidean differential operators onto the surface tangent space using the surface normal field.
 
-## Installation
-Use the following to set up the environment
-```sh
+This repository contains the code used for the experiments in the paper, including:
+
+- Poisson and Helmholtz PDE solves on flat and curved domains
+- Dirichlet and Neumann boundary conditions
+- Exact and learned surface normals
+- PDE solves on arbitrary triangle meshes
+- Empirical convergence experiments under increasing network capacity
+- Ablation and baseline experiments
+- Scripts for reproducing the figures in the paper
+- An extended suite of manufactured-solution experiments used to investigate the limitations of the method
+
+---
+
+## Overview
+
+For a scalar solution field `u`, PINNsur represents the solution using an MLP `u_theta`. The governing PDE is enforced through a physics-informed loss.
+
+For example, for the Poisson equation:
+
+$$
+\Delta_{\Omega} u = f
+$$
+
+the PDE loss is:
+
+$$
+\mathcal{L}_{\mathrm{PDE}} = \left\|
+\Delta_{\Omega} u_{\theta} - f
+\right\|_2^2
+$$
+
+For curved surfaces, the Laplace--Beltrami operator is computed using the surface normal field. Depending on the experiment, the normals are either:
+
+1. known analytically,
+2. approximated by an MLP from exact normals, or
+3. approximated by an MLP from normals computed on a triangle mesh.
+
+The primary convergence experiments study how the solution error changes as the number of trainable parameters of the PDE network is increased.
+
+---
+
+## Repository Structure
+
+The main experimental directories are:
+
+```text
+NN_convergence/
+├── data/                           # Meshes and geometry data
+├── src/                            # Shared source code
+├── scripts/                        # Paper figure/reproduction scripts
+├── renderings/images/              # Rendered results
+│
+├── test_exact/                     # PDEs on plane/sphere
+├── test_exact_parameterization/    # Heightfield and ellipsoid experiments
+├── test_computed_parameterization/ # Arbitrary triangle meshes
+│
+├── blender_utils/                  # Rendering utilities
+├── check_convergence.py            # Convergence analysis
+├── env.yaml                        # Conda environment
+└── README.md
+```
+
+The three main experiment directories correspond to progressively more general geometric settings.
+
+### `test_exact`
+
+Solves the Poisson equation directly on a plane or sphere, corresponding to Experiment 1 below.
+
+### `test_exact_parameterization`
+
+Contains the heightfield and ellipsoid experiments corresponding to Experiments 2--4:
+
+- exact surface normals,
+- an MLP trained on exact normals, and
+- an MLP trained on mesh-computed normals.
+
+### `test_computed_parameterization`
+
+Contains experiments on arbitrary triangle meshes, corresponding to Experiment 5.
+
+---
+
+# Experiments
+
+We constructed a sequence of experiments with progressively more involved geometric information. In addition to producing the representative examples shown in the paper, these experiments were used to investigate when neural PDE solving with autodifferentiation succeeds or fails.
+
+The complete experimental suite is summarized below.
+
+| # | Experiment | Heightfield / Plane Dirichlet | Heightfield / Plane Neumann | Ellipsoid / Sphere |
+|---|---|---:|---:|---:|
+| 1 | PDE on parameter domain | 10/10 | 9/10 | 4/4 |
+| 2 | Using exact normals | 10/10 | 6/10 | 8/12 |
+| 3 | MLP learns exact normals | 10/10 | 7/10 | 8/12 |
+| 4 | MLP learns mesh normals | 8/10 | 6/10 | 9/12 |
+| 5 | MLP learns normals on arbitrary mesh | Hand: 10/10 | Hand: 10/10 | Bunny: 10/10, Spot: 9/10 |
+
+Each entry reports the number of individual manufactured-solution experiments that exhibit empirical convergence under network refinement.
+
+The experiments correspond to the following settings:
+
+1. **PDE on the parameter domain.**  
+   Solve the Poisson equation directly on a plane with Dirichlet and Neumann boundary conditions and directly on the surface of a sphere.
+
+2. **Exact surface normals.**  
+   Solve the Poisson equation on a heightfield (with a 2D plane as its parameter domain) and an ellipsoid (with a sphere as its parameter domain), using exact surface normals.
+
+3. **MLP learns exact normals.**  
+   Repeat Experiment 2, but train an MLP to approximate the analytically known surface normals.
+
+4. **MLP learns mesh normals.**  
+   Repeat Experiment 3, but train the normal MLP using normals computed from a triangle mesh.
+
+5. **Arbitrary triangle meshes.**  
+   Train an MLP to approximate mesh normals and solve the PDE directly on arbitrary mesh surfaces such as the hand, bunny, and Spot models.
+
+---
+
+## Extended Convergence Experiments and Failure Cases
+
+The experiments above include a broader set of manufactured solutions than the representative examples shown in the main paper.
+
+The purpose of this extended suite is not only to demonstrate successful PDE solves, but also to investigate the regimes in which the empirical convergence behavior deteriorates.
+
+In particular, we systematically considered functions with increasing:
+
+- spatial frequency, and
+- function range / dynamic range.
+
+The non-convergent cases in the extended experiments are concentrated in the challenging regimes discussed in the **Limitations** section of the paper: high-frequency target functions, high-range target functions, and, for some Neumann problems, geometries for which the required normal field contains or is affected by discontinuities.
+
+### Heightfield with Neumann boundary conditions
+
+For the heightfield with Poisson--Neumann boundary conditions, the extended suite gives:
+
+| Normal representation | Converged experiments |
+|---|---:|
+| Exact normals | 6/10 |
+| MLP learns exact normals | 7/10 |
+| MLP learns mesh normals | 6/10 |
+
+Importantly, difficult high-frequency/high-range cases can fail even when the **exact surface normals** are supplied to the PDE solver. These failures therefore cannot in general be attributed solely to errors introduced by the learned normal network.
+
+### Ellipsoid
+
+We observe analogous behavior on the ellipsoid:
+
+| Normal representation | Converged experiments |
+|---|---:|
+| Exact normals | 8/12 |
+| MLP learns exact normals | 8/12 |
+| MLP learns mesh normals | 9/12 |
+
+The difficult cases again occur for sufficiently oscillatory or high-range functions. In these regimes, increasing the number of trainable parameters does not necessarily result in a consistent reduction of the approximation error.
+
+These extended experiments are intended to make the limitations of the method explicit. PINNsur is not claimed to converge for every manufactured solution or arbitrary PDE instance.
+
+The empirical convergence results in the paper instead study whether the approximation error decreases under increasing neural-network degrees of freedom for the tested PDE instances.
+
+---
+
+# Empirical Convergence Study
+
+The convergence experiments investigate the effect of increasing the effective number of degrees of freedom of the neural PDE solver.
+
+For each PDE instance, we keep the following fixed:
+
+- PDE
+- domain/surface
+- boundary condition
+- sampling procedure
+- network architecture family
+- training procedure
+
+We then vary the number of trainable parameters (`#W`) of the PDE network.
+
+The PDE network has depth 3, and its width is varied to change the number of trainable parameters.
+
+The relative solution error is:
+
+$$
+e =
+\frac{
+\left\|u_{\theta} - u_{\mathrm{GT}}\right\|_2
+}{
+\left\|u_{\mathrm{GT}}\right\|_2
+}
+$$
+
+We then examine how the relative error `e` changes as the number of trainable parameters (`#W`) increases.
+
+All networks are trained until optimization has saturated before the final error is evaluated. Therefore, the refinement variable in these experiments is **model capacity**, rather than training time or the number of sampled points.
+
+---
+
+## Checking Convergence
+
+The script
+
+```text
+check_convergence.py
+```
+
+runs inference for the trained models and computes the empirical convergence trend.
+
+Run:
+
+```bash
+python3 check_convergence.py test_exact
+```
+
+or:
+
+```bash
+python3 check_convergence.py test_exact_parameterization
+```
+
+or:
+
+```bash
+python3 check_convergence.py test_computed_parameterization
+```
+
+Make sure that the `operation` field in the corresponding configuration file is set to:
+
+```json
+"operation": "plot"
+```
+
+before running the convergence analysis.
+
+For an individual experiment, the script fits a line to:
+
+```text
+log(relative error) vs. log(# trainable parameters)
+```
+
+and computes the slope and correlation coefficient.
+
+The automated heuristic labels an individual experiment as exhibiting convergence when:
+
+```text
+slope < -0.3
+correlation_coefficient < -0.5
+```
+
+These numerical thresholds provide an automated way of identifying a sufficiently consistent decreasing error trend in the experimental results. They should be interpreted as an **empirical analysis heuristic**, rather than a theorem-backed convergence guarantee.
+
+---
+
+# Installation
+
+We recommend creating the provided Conda environment:
+
+```bash
 conda env create -f env.yaml
 conda activate test_convergence
 ```
 
-## Setup
-This code is tested on _x64 linux_ platform using _Python 3.11_.
-The code should run out of the box if all the required packages are installed.
+The code has been tested on an x64 Linux platform using Python 3.11.
 
-The repository has three directories
-1. [test_exact](https://github.com/Pranav-Jain/NN_convergence/tree/main/test_exact) : Solve the Poisson equation on the plane and sphere(experiment 1).
-2. [test_exact_parameterization](https://github.com/Pranav-Jain/NN_convergence/tree/main/test_exact_parameterization): Solve the Poisson equation on heightfield and ellipsoid (experiment 2,3,4).
-3. [test_computed_parameterization](https://github.com/Pranav-Jain/NN_convergence/tree/main/test_computed_parameterization): Solve the Poisson equation on arbitrary mesh (experiment 5).
+The code should run after all packages specified in `env.yaml` have been installed.
 
-## Run
-Go to the required directory: [test_exact](https://github.com/Pranav-Jain/NN_convergence/tree/main/test_exact), [test_exact_parameterization](https://github.com/Pranav-Jain/NN_convergence/tree/main/test_exact_parameterization) or [test_computed_parameterization](https://github.com/Pranav-Jain/NN_convergence/tree/main/test_computed_parameterization).
+---
 
-Each directory has a file _config.json_.
+# Running the Main Experiments
 
-After setting the _config.json_, run the following command:
-```sh
-python3 test_convergence.py [1|2|....]
+Navigate to the experiment directory you want to run:
+
+```bash
+cd test_exact
 ```
-The last argument is the example number you want to run for.
-Use the `"operation"` argument to switch between training and inference.
 
-### Config Files
-The config file for each directory look like the following:
-#### <u>test_exact</u>
-The _config.json_ in [test_exact](https://github.com/Pranav-Jain/NN_convergence/tree/main/test_exact) looks like the following
-```sh
+or:
+
+```bash
+cd test_exact_parameterization
+```
+
+or:
+
+```bash
+cd test_computed_parameterization
+```
+
+Each experiment directory contains a `config.json`.
+
+After setting the desired configuration, run:
+
+```bash
+python3 test_convergence.py <example_number>
+```
+
+For example:
+
+```bash
+python3 test_convergence.py 1
+```
+
+The final argument specifies the manufactured-solution example to run.
+
+Use the `"operation"` entry in `config.json` to switch between training and plotting/inference.
+
+---
+
+# Configuration Files
+
+## `test_exact`
+
+The `config.json` for `test_exact` has the following structure:
+
+```json
 {
-    "dimension": [2 | 3],
+    "dimension": [2, 3],
     "bc": ["dirichlet", "neumann"],
     "operation": ["train", "plot"],
     "threshold": 0.0,
-    
-    "domain" : {
+
+    "domain": {
         "min": -1.0,
         "max": 1.0
     },
 
-    "architecture" : {
-        "lr" : 1e-3,
-        "num_layers" : 3,
-        "grad_clip" : 10.0,
-        "scheduler_patience" : 1000,
-        "num_samples" : 10000,
-        "max_iter" : 150000
+    "architecture": {
+        "lr": 1e-3,
+        "num_layers": 3,
+        "grad_clip": 10.0,
+        "scheduler_patience": 1000,
+        "num_samples": 10000,
+        "max_iter": 150000
     }
 }
-``` 
+```
 
-#### <u>test_exact_parameterization</u>
-In the code, we choose 0.5*(x^2 + y^2) as the heightfield and x^2/9 + y^2/4 + z^2 = 1 as the ellipsoid. These are the two surfaces we solve the Poisson equation on.
+The options shown in arrays indicate the available choices rather than literal values to be supplied simultaneously.
 
-The _config.json_ in [test_exact_parameterization](https://github.com/Pranav-Jain/NN_convergence/tree/main/test_exact_parameterization) looks like the following
-```sh
+---
+
+## `test_exact_parameterization`
+
+For these experiments, the two analytic surfaces are the heightfield and ellipsoid.
+
+### Heightfield
+
+The heightfield is defined by:
+
+$$
+z = \frac{1}{2}\left(x^2 + y^2\right)
+$$
+
+### Ellipsoid
+
+The ellipsoid is defined by:
+
+$$
+\frac{x^2}{9}
++
+\frac{y^2}{4}
++
+z^2
+=
+1
+$$
+
+The configuration has the following structure:
+
+```json
 {
     "surface": ["heightfield", "ellipsoid"],
     "bc": ["dirichlet", "neumann"],
@@ -89,113 +379,293 @@ The _config.json_ in [test_exact_parameterization](https://github.com/Pranav-Jai
     "operation": ["train", "plot"],
     "threshold": 0.0,
 
-    "domain" : {
+    "domain": {
         "min": -1.0,
         "max": 1.0
     },
 
-    "architecture" : {
-        "lr" : 1e-3,
-        "num_layers" : 3,
-        "grad_clip" : 10.0,
-        "scheduler_patience" : 1000,
-        "num_samples" : 10000,
-        "max_iter" : 150000
+    "architecture": {
+        "lr": 1e-3,
+        "num_layers": 3,
+        "grad_clip": 10.0,
+        "scheduler_patience": 1000,
+        "num_samples": 10000,
+        "max_iter": 150000
     }
 }
-``` 
+```
 
-#### <u>test_computed_parameterization</u>
-In the code, we choose an arbitrary mesh as the domain.
+The normal options correspond to:
 
-The _config.json_ in [test_computed_parameterization](https://github.com/Pranav-Jain/NN_convergence/tree/main/test_computed_parameterization) looks like the following
-```sh
+```text
+noNN        -> use exact normals directly
+withNN      -> MLP learns exact normals
+withNN_mesh -> MLP learns mesh-computed normals
+```
+
+---
+
+## `test_computed_parameterization`
+
+For these experiments, the domain is an arbitrary triangle mesh.
+
+The configuration has the following structure:
+
+```json
 {
-    pde": "helmholtz",
+    "pde": "helmholtz",
     "k": 2.0,
     "surface": ["hand", "bunny"],
     "bc": ["dirichlet", "neumann"],
     "operation": ["train", "plot"],
     "threshold": 0.0,
 
-    "architecture" : {
-        "lr" : 1e-3,
-        "num_layers" : 3,
-        "grad_clip" : 10.0,
-        "scheduler_patience" : 1000,
-        "num_samples" : 10000,
-        "max_iter" : 150000
+    "architecture": {
+        "lr": 1e-3,
+        "num_layers": 3,
+        "grad_clip": 10.0,
+        "scheduler_patience": 1000,
+        "num_samples": 10000,
+        "max_iter": 150000
     }
 }
 ```
 
-## Checking Convergence
-The script [check_convergence.py](https://github.com/Pranav-Jain/NN_convergence/blob/main/check_convergence.py) runs the inference for trained models for all examples and uses certain heuristics to check for convergence. The current heuristics used are that if for an example, the slope < -0.3 and correlation_coefficient < -0.5, then we claim convergence.
+---
 
-Use the following command to run the script
-```sh
-python3 check_convergence.py [test_exact|test_exact_parameterization|test_computed_parameterization]
+# Training the Surface-Normal Networks
+
+PINNsur can use a neural field to approximate the surface normal field.
+
+For the analytic heightfield and ellipsoid experiments, use:
+
+```text
+train_hf_normal.py
+train_ellipsoid_normal.py
 ```
-__Note__: Make sure that the operation in the config file for the directory you are running for is set to _"plot"_ before running the above command.
 
-## Reproducing Paper Scripts and Figures
-All paper figure pipelines are in [scripts/figure_scripts](https://github.com/Pranav-Jain/NN_convergence/tree/main/scripts/figure_scripts).
+Run:
 
-1. Activate the environment:
-```sh
+```bash
+python3 train_hf_normal.py exact
+```
+
+or:
+
+```bash
+python3 train_hf_normal.py mesh
+```
+
+and similarly:
+
+```bash
+python3 train_ellipsoid_normal.py exact
+```
+
+or:
+
+```bash
+python3 train_ellipsoid_normal.py mesh
+```
+
+The argument specifies whether the normal network should learn:
+
+```text
+exact -> analytically computed normals
+mesh  -> normals computed from the mesh
+```
+
+For arbitrary triangle meshes, use:
+
+```bash
+python3 train_NN_mesh_normals.py <meshname>
+```
+
+where:
+
+```text
+<meshname>.obj
+```
+
+is present in the `data/` directory.
+
+---
+
+# Reproducing Paper Figures
+
+All paper figure pipelines are located in:
+
+```text
+scripts/figure_scripts/
+```
+
+First activate the environment:
+
+```bash
 conda activate test_convergence
 ```
 
-2. (Optional) If you cloned fresh, make scripts executable:
-```sh
+If the repository was freshly cloned, the scripts can be made executable with:
+
+```bash
 chmod +x scripts/figure_scripts/run_*.sh
 ```
 
-3. Generate all paper scripts/figures:
-```sh
+To generate all paper figure pipelines:
+
+```bash
 for f in scripts/figure_scripts/run_*.sh; do
     echo "Running $f"
     bash "$f"
 done
 ```
 
-4. Generated outputs are written to:
-     - `scripts/images` (rendered figure images)
-     - `scripts/plots` (convergence and comparison plots)
+Generated outputs are written to:
 
-5. To run one figure pipeline only (example):
-```sh
+```text
+scripts/images/
+scripts/plots/
+```
+
+where:
+
+- `scripts/images/` contains rendered figure images, and
+- `scripts/plots/` contains convergence and comparison plots.
+
+To run a single figure pipeline, for example:
+
+```bash
 bash scripts/figure_scripts/run_moai.sh
 ```
 
-6. To regenerate convergence summaries after plotting:
-```sh
+The main orchestrator used by the figure scripts is:
+
+```text
+scripts/run_mesh_pipeline.py
+```
+
+### Regenerating convergence summaries
+
+After plotting the trained models, convergence summaries can be regenerated with:
+
+```bash
 python3 check_convergence.py test_exact
 python3 check_convergence.py test_exact_parameterization
 python3 check_convergence.py test_computed_parameterization
 ```
 
-__Notes__:
-- Training can be expensive; several figure scripts use `--render-only` and assume pretrained outputs already exist in `test_*/*_results`.
-- The main orchestrator used by the figure scripts is `scripts/run_mesh_pipeline.py`.
+> **Note:** Training can be computationally expensive. Several paper figure scripts use `--render-only` and assume that pretrained outputs are already available in the corresponding `test_*/*_results` directories.
 
-## Training MLP to learn the normals
-The scripts [train_hf_normal.py](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/train_hf_normal.py) and [train_ellipsoid_normal.py](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_exact_parameterization/train_ellipsoid_normal.py) can be used to train an MLP that given a point on the domain returns the unit normal at that point.
-Use the following command to run the script
-```sh
-python3 [train_hf_normal.py|train_ellipsoid_normal.py] [exact|mesh]
+---
+
+# Pretrained Models and Results
+
+We test multiple analytical/manufactured functions for each experimental setting.
+
+Pretrained models are stored in the corresponding result directories, including `poisson_results` where applicable.
+
+Models are generated by setting:
+
+```json
+"operation": "train"
 ```
-The argument is to know whether to learn the exact normals (experiment 3) or the mesh normals (experiment 4).
 
-To train mesh normals on arbitrary mesh, use the script [train_NN_mesh_normals.py](https://github.com/Pranav-Jain/NN_convergence/blob/main/test_computed_parameterization/train_NN_mesh_normals.py). Use the following command to run the script
-```sh
-python3 train_NN_mesh_normals.py <meshname>
+in the corresponding configuration file.
+
+The result directories also contain outputs generated from the trained models, including:
+
+- convergence plots,
+- visualizations of the ground-truth solution,
+- predicted solutions, and
+- solution errors.
+
+Set:
+
+```json
+"operation": "plot"
 ```
-where _meshname.obj_ is the mesh file present in the [data](https://github.com/Pranav-Jain/NN_convergence/tree/main/data) directory.
 
-## Pretrained models
-We test using multiple analytical functions for all experiments. The pretrained models are stored in __poisson_results__ for each experiment. The models are trained using the `operation="train"` in the config file.
-The directory also contains the convergence plots for each example using `operation="plot"` on the trained models and a visualization of the true function, predicted function after training and the error.
+to perform inference and generate the corresponding plots from trained models.
 
-## Stopping Criteria and Runtime
-For training all models, we use Adam with a scheduler that lowers the learning rate if the loss doesn't go down after a certain number of iterations. We stop training after 150000 iterations (all networks saturate by that point). For most experiments, it takes about an hour to train a single model.
+---
+
+# Training and Stopping Criteria
+
+All models are optimized using Adam.
+
+A learning-rate scheduler reduces the learning rate when the training loss stops improving for a specified number of iterations.
+
+The default PDE-network configuration uses:
+
+```text
+Initial learning rate : 1e-3
+Network depth         : 3
+Training samples      : 10000
+Maximum iterations    : 150000
+Gradient clipping     : 10.0
+```
+
+We train each PDE network for a maximum of **150,000 iterations** to ensure that optimization has saturated.
+
+Although many networks saturate substantially earlier, using the same maximum training budget across network sizes prevents differences in training duration from being confused with the effect of increasing network capacity.
+
+For most experiments, training a single model takes approximately one hour on the hardware used during development.
+
+---
+
+# Scope and Limitations
+
+The convergence experiments in this repository constitute an **empirical study of convergence with respect to increasing neural-network degrees of freedom**.
+
+They should not be interpreted as a theoretical guarantee that PINNsur converges for arbitrary PDEs, geometries, or target functions.
+
+The extended experiments expose several important failure regimes.
+
+### 1. High-frequency solutions
+
+Sufficiently oscillatory target functions can become difficult for the finite neural representation and optimization procedure to resolve.
+
+### 2. High-range solutions
+
+Solutions with a sufficiently large dynamic range can fail to exhibit decreasing approximation error under network refinement.
+
+### 3. Discontinuous normal fields
+
+Neumann boundary conditions can become particularly difficult when the required normal field is discontinuous, for example near sharp corners.
+
+These cases are discussed explicitly in the **Limitations** section and supplemental experiments of the paper.
+
+The fact that some high-frequency and high-range experiments fail even when exact normals are provided also indicates that these failures cannot generally be explained only by inaccuracies in the learned normal representation.
+
+---
+
+# Interpretation of the Results
+
+The convergence experiments should be interpreted at the level of the **individual PDE instance**.
+
+For each instance, we ask whether increasing the number of trainable PDE-network parameters results in a systematic reduction of the relative solution error after optimization has saturated.
+
+The larger experimental suite was deliberately used to probe difficult regimes and therefore contains both convergent and non-convergent examples.
+
+Consequently:
+
+- the results do **not** constitute a theoretical convergence guarantee;
+- the method is **not** claimed to converge for every function in the extended suite;
+- the observed non-convergent cases help characterize the limitations of PINNsur, particularly for high-frequency, high-range, and discontinuous-normal settings.
+
+---
+
+# Citation
+
+If you use this code in your research, please cite:
+
+```bibtex
+@inproceedings{pinnsur2026,
+    title     = {PINNsur: Physics-Informed Neural Networks for PDEs on Curved Surfaces},
+    author    = {Anonymous},
+    booktitle = {Advances in Neural Information Processing Systems},
+    year      = {2026}
+}
+```
+
+> The citation above uses the anonymous submission information. We will update the author list and publication information after the review process.
