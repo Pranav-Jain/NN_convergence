@@ -653,18 +653,3 @@ Consequently:
 - the observed non-convergent cases help characterize the limitations of PINNsur, particularly for high-frequency, high-range, and discontinuous-normal settings.
 
 ---
-
-# Citation
-
-If you use this code in your research, please cite:
-
-```bibtex
-@inproceedings{pinnsur2026,
-    title     = {PINNsur: Physics-Informed Neural Networks for PDEs on Curved Surfaces},
-    author    = {Anonymous},
-    booktitle = {Advances in Neural Information Processing Systems},
-    year      = {2026}
-}
-```
-
-> The citation above uses the anonymous submission information. We will update the author list and publication information after the review process.
